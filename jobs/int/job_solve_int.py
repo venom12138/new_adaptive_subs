@@ -8,7 +8,7 @@ from jobs.core import Job
 from metric_logging import log_scalar, log_scalar_metrics, MetricsAccumulator, log_text
 from supervised.int.gen_subgoal_data import generate_problems
 
-from visualization.seq_parse import logic_statement_to_seq_string, entity_to_seq_string
+from third_party.INT.visualization.seq_parse import logic_statement_to_seq_string, entity_to_seq_string
 
 
 def solve_problem(solver, input_state):

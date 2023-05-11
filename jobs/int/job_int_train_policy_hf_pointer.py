@@ -57,7 +57,6 @@ class TrainHfForIntPolicyPointer(hf_job.HfTrainingPipeline):
         self.max_steps_into_future = max_steps_into_future
 
     def _generate_dataset(self, n_proofs, done_epochs, log_prefix):
-
         formula_pairs = generate_state_destination_action_data(
             n_proofs, self.max_steps_into_future, self.n_samples_per_proof
         )

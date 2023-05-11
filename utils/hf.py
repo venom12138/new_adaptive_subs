@@ -216,6 +216,7 @@ class CustomizedSeq2SeqTrainer(transformers.Seq2SeqTrainer):
         Subclass and override for custom behavior.
         """
         labels = inputs["labels"]
+        # print(f"inputs:{inputs}")
         outputs = model(**inputs)
         # Save past state if it exists
         if self.args.past_index >= 0:

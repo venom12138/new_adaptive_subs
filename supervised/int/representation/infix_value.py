@@ -22,6 +22,8 @@ MULTI_CHAR_LEXEMES = [
     'sqrt',
     r'\leq ',
     r'\geq ',
+    r'\gt',
+    r'\lt',
     # We haven't use inequalities in INT yet, so not sure if '\leq' and '\geq'
     # work properly.
 ]
@@ -42,10 +44,10 @@ VOCABULARY = (
             ')',
             '*',
             '+',
-            '0',
-            '1',
             '-',  # both subtraction and unary minus
+            '^'
         ] +
+        [str(i) for i in range(11)] + 
         list(string.ascii_lowercase) +
         MULTI_CHAR_LEXEMES
 )
@@ -61,7 +63,7 @@ assert STR_TO_TOKEN[PADDING_LEXEME] == 1
 assert STR_TO_TOKEN[EOS_LEXEME] == 2
 assert STR_TO_TOKEN[OUTPUT_START_LEXEME] == 3
 
-assert len(TOKEN_TO_STR) == 66
+assert len(TOKEN_TO_STR) == 78 # 66
 
 DISTANCE_TOKENS = {i: STR_TO_TOKEN[DISTANCE_TO_GOAL_LEXEMES[i]] for i in range(MAX_PROOF_LENGTH)}
 

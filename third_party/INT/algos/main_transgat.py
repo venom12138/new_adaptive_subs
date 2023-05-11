@@ -13,9 +13,9 @@ from transformers import get_cosine_schedule_with_warmup
 
 from algos.eval import eval_agent
 from algos.lib.obs import nodename2index, thm2index, batch_process
-from data_generation.generate_problems import generate_multiple_problems
+from data_generation.multi_path_generate_problems import generate_multiple_problems
 from data_generation.utils import Dataset
-from TransGrapher.models.TransGAT import TransGATThmNet
+# from TransGrapher.models.TransGAT import TransGATThmNet
 from algos.model.thm_model import ThmNet
 
 

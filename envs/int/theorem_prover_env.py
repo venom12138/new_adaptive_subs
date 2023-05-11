@@ -5,14 +5,14 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 
-from proof_system.all_axioms import all_axioms_to_prove
-from proof_system.prover import Prover
+from third_party.INT.proof_system.all_axioms import all_axioms_to_prove
+from third_party.INT.proof_system.prover import Prover
 from supervised.int.utils import index2thm
-from visualization.latex_parse import logic_statement_to_latex, entity_to_latex
-from data_generation.generate_problems import generate_problem
+from third_party.INT.visualization.latex_parse import logic_statement_to_latex, entity_to_latex
+from third_party.INT.data_generation.multi_path_generate_problems import multi_path_generate_problem
 import random
 
-from visualization.seq_parse import entity_to_seq_string
+from third_party.INT.visualization.seq_parse import entity_to_seq_string
 
 random.seed(124)
 
@@ -96,7 +96,7 @@ class TheoremProverEnv(gym.Env):
 
         # lemma = all_axioms_to_prove[index2thm[action[0]]]
         lemma = all_axioms_to_prove[action[0]]
-        input_entities =  action[1:]
+        input_entities = action[1:]
 
         if self.verbo:
             info = {
@@ -192,6 +192,7 @@ class TheoremProverEnv(gym.Env):
                 step = problem[0]
             else:
                 kl_dict = json.load(open('assets/int/benchmark/field/orders.json', "r"))
+                # TODO:leave a bug here
                 step = generate_problem(
                     length=5,
                     num_axioms=5,

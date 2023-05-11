@@ -50,5 +50,5 @@
   "static_position_embeddings": false,
   "transformers_version": "4.2.0dev0",
   "use_cache": true,
-  "vocab_size": 68
+  "vocab_size": 94 
 }

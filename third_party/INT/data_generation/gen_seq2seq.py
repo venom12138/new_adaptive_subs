@@ -4,7 +4,7 @@ import os
 import random
 import pickle
 
-from data_generation.generate_problems import generate_multiple_problems
+from data_generation.multi_path_generate_problems import generate_multiple_problems
 from proof_system.graph_seq_conversion import Parser
 
 
@@ -56,23 +56,23 @@ if __name__ == "__main__":
         sources_to_targets = None
         for j in range(int(args.num_probs/1000)):
             if args.use_combos:
-                datasets, problems = generate_multiple_problems(num_axioms=args.k, length=args.l,
+                datasets, problems = generate_multiple_problems(num_axioms=args.k, max_length=0, length=args.l,
                                                                 num_probs=1000, train_test="train",
                                                                 combos=combos, degree=args.degree,
                                                                 num_order_or_combo=args.num_order_or_combo)
             else:
-                datasets, problems = generate_multiple_problems(num_axioms=args.k, length=args.l,
+                datasets, problems = generate_multiple_problems(num_axioms=args.k, max_length=0, length=args.l,
                                                                 num_probs=1000, train_test="train",
                                                                 orders=orders, degree=args.degree,
                                                                 num_order_or_combo=args.num_order_or_combo)
-            sources_to_targets = generate_multiple_seq2seq(multiple_problems=problems,
-                                                           all_sources_to_targets=sources_to_targets)
+            sources_to_targets = generate_multiple_seq2seq(multiple_problems=problems[f"k={args.k}l={args.l}"],
+                                                            all_sources_to_targets=sources_to_targets)
             pickle.dump(problems, open(os.path.join(args.dump_path, "problems_part{}.pkl".format(j+1)), "wb"))
     else:
-        datasets, problems = generate_multiple_problems(num_axioms=args.k, length=args.l,
+        datasets, problems = generate_multiple_problems(num_axioms=args.k, max_length=0, length=args.l,
                                                         num_probs=args.num_probs, train_test="train",
                                                         orders=orders, degree=args.degree)
-        sources_to_targets = generate_multiple_seq2seq(multiple_problems=problems)
+        sources_to_targets = generate_multiple_seq2seq(multiple_problems=problems[f"k={args.k}l={args.l}"])
         pickle.dump(problems, open(os.path.join(args.dump_path, "problems.pkl"), "wb"))
 
     randomised_keys = list(sources_to_targets.keys())

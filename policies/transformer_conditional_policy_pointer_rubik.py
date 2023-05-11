@@ -3,10 +3,7 @@ from copy import deepcopy
 import torch
 from transformers import MBartForConditionalGeneration
 
-# from envs.int.theorem_prover_env import TheoremProverEnv
-# from policies.policy_utils import decode_prediction
-# from supervised import ActionRepresentationPointer
-# from supervised.int.gen_subgoal_data import generate_problems
+
 # from supervised.int.hf_data import GoalDataset, IntPolicyTokenizerPointer
 # from supervised.int.representation import infix
 # from supervised.int.representation.action_representation_pointer import generate_masks_for_logic_statement

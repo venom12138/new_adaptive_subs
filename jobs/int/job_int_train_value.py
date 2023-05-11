@@ -8,7 +8,6 @@ from metric_logging import log_text, log_scalar
 import supervised
 from supervised.int import hf_data
 from supervised.int.gen_policy_data import generate_state_destination_action_data, problem_to_policy_data_points
-from supervised.int.gen_subgoal_data import generate_problems
 from supervised.int.gen_value_data import generate_value_data
 from supervised.int.representation.action_representation_mask import PADDING_LEXEME
 from supervised.int.representation.infix_value import InfixValueRepresentation

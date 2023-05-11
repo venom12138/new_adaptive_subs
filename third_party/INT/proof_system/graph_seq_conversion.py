@@ -1,4 +1,4 @@
-from visualization.seq_parse import entity_to_seq_string, logic_statement_to_seq_string
+from visualization.seq_parse import entity_to_seq_string, my_logic_statement_to_seq_string
 from proof_system.all_axioms import all_axioms_to_prove
 
 
@@ -21,7 +21,21 @@ compact_theorem_name = {
     "SquareGEQZero": "sqr_geq_zero",
     "EquivalenceImpliesDoubleInequality": "equ_dbl_ineq",
     "FirstPrincipleOfInequality": "ineq_prin_one",
-    "SecondPrincipleOfInequality": "ineq_prin_two"
+    "SecondPrincipleOfInequality": "ineq_prin_two",
+    # new add
+    "MultiplicationZero": "mul_zero",
+    "AMGMInequality": "amgm_ineq",
+    "BernoulliInequality": "bern_ineq",
+    "YoungInequality": "young_ineq",
+    "HolderInequality": "holder_ineq",
+    "ChebyshevSumInequality": "cheby_sum_ineq",
+    "ExponentialInequality": "exp_ineq",
+    "MinkowskiInequality": "minkowski_ineq",
+    "JensenInequality": "jensen_ineq",
+    "InverseInequality": "inverse_ineq",
+    "SquareRootInequality": "sqrt_ineq",
+    "BigtoBiggerInequality": "big2bigger_ineq",
+    "SecondLawOfIneqMoveTerm": "second_ineq_mv_tm",
 }
 
 
@@ -61,9 +75,9 @@ class Parser:
 
         if not is_last_step:
             next_premises = next_step["observation"]["ground_truth"]
-            next_premises_string = " & ".join([logic_statement_to_seq_string(premise) for premise in next_premises])
+            next_premises_string = " & ".join([my_logic_statement_to_seq_string(premise) for premise in next_premises])
             target += next_premises_string + " to " + \
-                      logic_statement_to_seq_string(next_step["observation"]["objectives"][0])
+                      my_logic_statement_to_seq_string(next_step["observation"]["objectives"][0])
         else:
             target += "ø"
         target = self.filter_seq_string(target)
@@ -79,7 +93,7 @@ class Parser:
             if argument.root.name == step["observation"]["objectives"][0].name:
                 root_name = "obj"
             else:
-                root_name = logic_statement_to_seq_string(argument.root)
+                root_name = my_logic_statement_to_seq_string(argument.root)
             index_by_name = self.index_entity_by_name_in_root(argument)
             if index_by_name == 0:
                 index_by_name_str = ""
@@ -94,12 +108,12 @@ class Parser:
 
     def observation_to_source(self, observation):
         premises = observation["ground_truth"]
-        premises_string = " & ".join([logic_statement_to_seq_string(premise) for premise in premises])
+        premises_string = " & ".join([my_logic_statement_to_seq_string(premise) for premise in premises])
         if premises_string:
             source = premises_string + " to "
         else:
             source = "to "
-        source = source + logic_statement_to_seq_string(observation["objectives"][0])
+        source = source + my_logic_statement_to_seq_string(observation["objectives"][0])
         source = self.filter_seq_string(source)
         return source
 
@@ -139,7 +153,7 @@ class Parser:
             entity_root = goals[0]
         else:
             for logic_statement in goals + premises:
-                if entity_root_string == logic_statement_to_seq_string(logic_statement):
+                if entity_root_string == my_logic_statement_to_seq_string(logic_statement):
                     entity_root = logic_statement
                     break
         assert entity_root
@@ -171,8 +185,8 @@ if __name__ == "__main__":
     from data_generation.generate_problems import generate_multiple_problems
     orders = json.load(open("/Users/qj213/Papers/My papers/INT_arXiv/INT/data/benchmark/ordered_field/orders.json"))
     dataset, problems = generate_multiple_problems(num_axioms=3, length=3,
-                                                   num_probs=100, train_test="train",
-                                                   orders=orders, degree=0)
+                                                num_probs=100, train_test="train",
+                                                orders=orders, degree=0)
     parser = Parser()
     for problem in problems:
         for step in problem:

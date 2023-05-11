@@ -6,7 +6,7 @@ from proof_system.all_axioms import all_axioms_to_prove
 from proof_system.prover import Prover
 from algos.lib.obs import obs_to_graphs, index2thm, obs_to_graphs_dgl
 from visualization.latex_parse import logic_statement_to_latex, entity_to_latex
-from data_generation.generate_problems import generate_problem
+from data_generation.multi_path_generate_problems import multi_path_generate_problem
 import random
 
 random.seed(123)
@@ -121,6 +121,7 @@ class TheoremProver(gym.Env):
             print("lemma input no %i is not %i"%(lemma.input_no, len(input_entities)))
             raise ValueError("REWARD_OPERAND_SIZE_MISMATCH")
         else:
+            
             result = self.proof.apply_theorem(lemma, input_entities)
         info_string = self.proof.interpret_result(result)
         if info_string == "REWARD_THEOREM_PROCEEDED" and False:
@@ -162,7 +163,24 @@ class TheoremProver(gym.Env):
             return (None, None, None, None), reward, done, info
         else:
             return self._get_obs(), reward, done, info
-
+    
+    def _get_action(self, action):
+        if self.obs_mode == "seq":
+            lemma, input_entities = self.proof.parser.find_action(self.proof.get_observation(), action)
+        else:
+            lemma = all_axioms_to_prove[index2thm[action[0]]]
+            input_entities = list()
+            for input_entity_index in action[1:]:
+                input_entity_index -= 1
+                if input_entity_index != -1:
+                    try:
+                        entity = self.ind_to_ent[input_entity_index][0]
+                    except:
+                        print(self.ind_to_ent)
+                        print(input_entity_index)
+                    input_entities.append(entity)
+        return lemma, input_entities
+        
     def _get_obs(self):
         if self.obs_mode == "seq":
             return self.parser.observation_to_source(self.proof.get_observation())
@@ -192,7 +210,7 @@ class TheoremProver(gym.Env):
             kl = random.choice(self.env_config["proof_dir"])
             combos, prob_length = int(kl[2]), int(kl[6])
             # take first step
-            step = generate_problem(combos, prob_length, "train", backwards=True, orders=self.kl_dict)[0]
+            step = multi_path_generate_problem(combos, prob_length, "train", backwards=True, orders=self.kl_dict)[0]
             conditions = step["observation"]["ground_truth"]
             objectives = step["observation"]["objectives"]
             self.proof = Prover(axioms=all_axioms_to_prove, conditions=conditions,

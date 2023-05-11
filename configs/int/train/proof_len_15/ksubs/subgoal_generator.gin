@@ -17,6 +17,7 @@ InverseSqrtWithWarmup.warmup_steps = 4000
 
 generate_problems.proof_length = 15
 generate_problems.n_workers = 8
+generate_problems.max_length_mode = True
 get_available_axioms.axiom_set_name = 'ordered_field'
 
 extract_state_pairs.subgoal_distance = 3

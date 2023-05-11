@@ -8,13 +8,14 @@ import random
 
 random.seed(0)
 
-
+# 我懂这个证明的逻辑了，对于extend_core_gt产生出来的statement来说，他只需要通过original_coding，然后匹配到statement中对应的entity
+# 然后就完成了一步证明，对应的entity就作为新的lhs和rhs进入到下一步证明中，不对，其实本质上还是依靠apply_theorem来完成的
 def forward_to_backward(steps, unittest=True, debug=False):
     if steps is None or len(steps) == 0:
         return steps
     proof = Prover(
         axioms=all_axioms_to_prove,
-        conditions=steps[0]["observation"]["ground_truth"],
+        conditions=steps[0]["observation"]["ground_truth"], # 这个是steps[0]的ground_truth，也就是说，后面产生的新的ground_truth都没有被加入进来，只有make_up_conditions，我需要把一些一开始的condition给罗列进去
         objectives=steps[0]["observation"]["objectives"],
         prove_direction="backward"
     )
@@ -30,19 +31,19 @@ def forward_to_backward(steps, unittest=True, debug=False):
             return None
 
         step = steps.pop()
-        if step["lemma"].name == "EquivalenceSubstitution":
+        if step["lemma"].name == "EquivalenceSubstitution": # 这个好像是说，如果是EquivalenceSubstitution，那么就直接跳到下一步，也不是
             last_step = steps.pop()
             assert last_step["lemma"].name != "EquivalenceSubstitution"
             transform_gt = last_step["transform_gt"]
-            if transform_gt:
+            if transform_gt: # 这个
                 transformed_side = last_step["transformed_side"]
                 lemma = last_step["lemma"]
                 if lemma.input_no == 1:
-                    coding = get_entity_coding_from_ls(step["input_entities"][0].root, step["input_entities"][0])
+                    coding = get_entity_coding_from_ls(step["input_entities"][0].root, step["input_entities"][0]) # 这里相当于是确定了hypo_objective和input_entities.root是同一个东西，这也就意味着在这一套逻辑里，是不会存在多个证明的分支的
                     operand = get_entity_from_ls_and_coding(hypo_objective, coding)
                     operands = [operand]
                 else:
-                    first_op_name = lemma.transform_recover_first_name(step["input_entities"])
+                    first_op_name = lemma.transform_recover_first_name(step["input_entities"]) # input_no=2的情况不多见
                     found_first_name = False
                     for ls in proof.get_objectives() + proof.get_ground_truth():
                         if (len(first_op_name) == 1 and first_op_name in ls.name.split()) or \
@@ -82,8 +83,8 @@ def forward_to_backward(steps, unittest=True, debug=False):
         if proof.is_proved():
             return translated_steps
 
-        if transform_gt:
-            all_diff_subtrees = all_different_subtrees(proof.get_objectives()[0])
+        if transform_gt: # transform_gt肯定只会对一边进行变换，另一边肯定会保持不变
+            all_diff_subtrees = all_different_subtrees(proof.get_objectives()[0]) # 这个其实是进行了一步简化分析，直接把相同的给去掉了，因为相同的肯定就直接相等了，好像不对
             done = False
             while all_diff_subtrees and (not done):
                 lhs, rhs = all_diff_subtrees.pop(0)
@@ -93,7 +94,7 @@ def forward_to_backward(steps, unittest=True, debug=False):
                         if hypo_rhs.name == lhs.name:
                             hypo_objective = EmptyLogicStatement(None, [rhs, lhs])
                             done = True
-                        elif hypo_rhs.name == rhs.name:
+                        elif hypo_rhs.name == rhs.name: # 左边变了，右边没变
                             hypo_objective = EmptyLogicStatement(None, [lhs, rhs])
                             done = True
                         else:
@@ -113,13 +114,15 @@ def forward_to_backward(steps, unittest=True, debug=False):
                         done = True
                     else:
                         raise NotImplementedError
+        elif coding is None: # big change
+            hypo_objective = proof.get_objectives()[0]
         else:
-            hypo_lhs = get_entity_from_ls_and_coding(hypo_objective, coding[0])
+            hypo_lhs = get_entity_from_ls_and_coding(hypo_objective, coding[0]) # 确实，需要coding的原因是，需要把这个entity从ls中取出来，不能是随意乱构造一个同名的entity，因为需要entity.root
             hypo_rhs = get_entity_from_ls_and_coding(hypo_objective, coding[1])
 
             all_diff_subtrees = all_different_subtrees(proof.get_objectives()[0])
             done = False
-            while all_diff_subtrees and (not done):
+            while all_diff_subtrees and (not done): # 这个hypo_objective的作用其实是做一步double check，因为这是一个深搜，所以一定存在这样的对应关系
                 lhs, rhs = all_diff_subtrees.pop(0)
                 if lhs is not None:
                     if lhs.name == hypo_lhs.name and rhs.name == hypo_rhs.name:

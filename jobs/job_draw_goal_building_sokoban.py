@@ -11,12 +11,12 @@ from metric_logging import log_image, log_scalar
 
 class JobDrawGoalBuildingSokoban(Job):
     def __init__(self,
-                 goal_builder_class,
-                 total_confidence_level,
-                 internal_confidence_level,
-                 max_goals,
-                 max_radius,
-                 ):
+                goal_builder_class,
+                total_confidence_level,
+                internal_confidence_level,
+                max_goals,
+                max_radius,
+                ):
 
         self.goal_builder = goal_builder_class()
         self.total_confidence_level = total_confidence_level

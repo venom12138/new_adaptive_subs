@@ -4,11 +4,6 @@ import torch
 import transformers
 from transformers import MBartForConditionalGeneration
 
-# from envs.int.theorem_prover_env import TheoremProverEnv
-# from policies.policy_utils import decode_prediction
-# from supervised import ActionRepresentationPointer
-# from supervised.int import ActionRepresentationMask
-# from supervised.int.gen_subgoal_data import generate_problems
 # from supervised.int.hf_data import GoalDataset, IntPolicyTokenizer, IntGoalTokenizer, IntPolicyTokenizerMask, \
 #     IntPolicyTokenizerPointer
 # from supervised.int.representation import infix
@@ -101,10 +96,6 @@ class VanillaPolicyRubik:
         debug_info = {}
         actions_str = self.predict_action_str(proof_state, num_beams, num_return_sequences)
 
-        # _, mask_to_entity = generate_masks_for_logic_statement(proof_state['observation']['objectives'][0])
-        # actions_str = self.predict_action_str(state_formula, num_beams, num_return_sequences)
-
-        # print(f'state formula = {proof_state} | action_str = {actions_str}')
         full_actions = []
         for action_str in actions_str:
             decoded_action = rubik_solver_utils.decode_action(action_str)

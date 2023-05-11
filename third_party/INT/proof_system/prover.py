@@ -1,7 +1,7 @@
 from proof_system.logic_functions import necessary_logic_functions
 from proof_system.graph_seq_conversion import Parser
-
-
+from proof_system.utils import is_ls_type, is_all_operands_constant, numerical_compute_logic_statement, sub_tree_diff
+from visualization.seq_parse import logic_statement_name_to_seq_string
 class Prover:
     def __init__(self, axioms: dict, conditions: list, objectives: list, prove_direction: str):
         """
@@ -23,10 +23,10 @@ class Prover:
 
         self.axioms = axioms
         self.conditions = conditions
-        self.objectives = objectives
+        self.objectives = objectives # 这个其实被废弃了，objective_ids是现在有用的
         self.ent_id2ent = dict()
         self.ent_ent2id = dict()
-        self.ls_name2id = dict()
+        self.ls_name2id = dict() # key: name, value: id
         self.ls_id2ls = dict()
 
         # Register the premises, ground truths, and objectives
@@ -34,22 +34,42 @@ class Prover:
         self.initial_condition_ids = [con_id for con_id in self.condition_ids]
         self.ground_truth_ids = [ls_id for ls_id in self.condition_ids]
         self.objective_ids = self.add_logic_statements(self.objectives)
-
+        
+        self.initial_assumptions = [] # 有一些non-trivial的初始假设，比如：a>=0这样子的，需要保留下来作为conditions
+        for con_id in self.condition_ids:
+            con_ls = self.ls_id2ls[con_id]
+            if not is_ls_type(con_ls, 'Equivalent'):
+                self.initial_assumptions.append(con_id)
+        
         self.update_conditions()
 
         self.parser = Parser()
+        # self.last_step_objectives = self.get_objectives()
 
     @staticmethod
     def _trivial(logic_statement):
         # Checks if a logic statement is trivially true or not.
         logic_statement.update_name()
         lhs, rhs, = logic_statement.operands
-        if lhs.name == rhs.name and logic_statement.logic_function.name in necessary_logic_functions:
+        if lhs.name == rhs.name and logic_statement.logic_function.name in necessary_logic_functions and \
+            logic_statement.logic_function.name not in ['Bigger', 'Smaller']:
             return True
+        if is_all_operands_constant(logic_statement):
+            return numerical_compute_logic_statement(logic_statement)
         return False
-
+    
+    def get_objective_length(self):
+        objectives = self.get_objectives()
+        print(f"objectives: {objectives}")
+        seq_objectives = [len(logic_statement_name_to_seq_string(objective.name)) for objective in objectives]
+        print(f"seq_objectives: {[logic_statement_name_to_seq_string(objective.name) for objective in objectives]}")
+        print(f"length: {sum(seq_objectives)}")
+        # dd
+        return sum(seq_objectives)
+    
     def update_conditions(self):
         # Register the initial conditions as ground truth
+        self.condition_ids = list(set(self.condition_ids))
         for con_id in self.condition_ids:
             if con_id not in self.ground_truth_ids:
                 self.ground_truth_ids.append(con_id)
@@ -121,7 +141,34 @@ class Prover:
     def get_entities(self):
         # Get all the entities in the prover ever registered
         return list(self.ent_ent2id.values())
-
+    
+    def get_fuzzy_inequality_ground_truth(self):
+        gts = list()
+        for ls_id in set(sorted(self.ls_id2ls.keys(), reverse=True) + self.condition_ids):
+            ls = self.ls_id2ls[ls_id]
+            if self.logic_statement_connected(ls_id):
+                if ls.logic_function.name == "BiggerOrEqual" or ls.logic_function.name == "SmallerOrEqual":
+                    gts.append(ls)
+        return gts
+    
+    def get_strict_inequality_ground_truth(self):
+        gts = list()
+        for ls_id in set(sorted(self.ls_id2ls.keys(), reverse=True) + self.condition_ids):
+            ls = self.ls_id2ls[ls_id]
+            if self.logic_statement_connected(ls_id):
+                if ls.logic_function.name == "Bigger" or ls.logic_function.name == "Smaller":
+                    gts.append(ls)
+        return gts
+    
+    def get_equality_ground_truth(self):
+        gts = list()
+        for ls_id in set(sorted(self.ls_id2ls.keys(), reverse=True) + self.condition_ids):
+            ls = self.ls_id2ls[ls_id]
+            if self.logic_statement_connected(ls_id):
+                if ls.logic_function.name == "Equivalent":
+                    gts.append(ls)
+        return gts
+        
     def get_ground_truth(self):
         # Get all the ground truth in the prover ever registered,
         # including the initial conditions and statements proven later
@@ -152,34 +199,44 @@ class Prover:
             return True
         else:
             return False
-
+    # 也就是确定每一个ls是否都已经被证明过放在conclusions里面了
     def _logic_statements_exist_and_are_proven(self, ls_list):
         # If ls_list is empty, return True
         for ls in ls_list:
             ls_id = self.ls_name2id.get(ls.name, None)
-            if ls_id is not None and self.logic_statement_connected(ls_id):
+            if ls_id is not None and self.logic_statement_connected(ls_id): # 验证每一个ls是否都被放进ground_truth里了
                 pass
             else:
                 return False
         return True
 
     # Methods implemented differently in ProverBack and ProverLean
+    # operands可以理解为是操作数，which is a,b,c,constant, 甚至还有算式,比如add(a,f)这样
+    # 也就是说，除非这个lemma产生的conclusion正好解决了一个obj或者所有的assumption都是gt，否则这个lemma似乎就不会产生任何影响
     def apply_theorem(self, theorem, operands):
         # Apply a theorem with operands
-        results = theorem.execute_th(operands, mode=self.mode_theorem)
+        
+        # 完全懂了，这个就是axiom应用到操作数上面，返回一个assumptions和conclusions，
+        # conclusions就是将theorem应用到操作数上形成的equvalent的Logic_Statement
+        results = theorem.execute_th(operands, mode=self.mode_theorem) 
+        
         assumptions, conclusions = results["Assumptions"], results["Conclusions"]
-
+        # print(f"assumptions:{assumptions}")
         # Prevent the scenario [0, 1] -> [0]
         assumption_names = [assump.name for assump in assumptions]
+        # print(f"assumption_names:{assumption_names}")
         conclusion_ids_to_delete = []
-        for i in range(len(conclusions)):
+        for i in range(len(conclusions)): # 把既是conclusion又是assumption的conclusion删掉
             if conclusions[i].name in assumption_names:
                 conclusion_ids_to_delete.append(i)
                 del conclusions[i]
-        conclusions = [conclusions[i] for i in range(len(conclusions)) if i not in conclusion_ids_to_delete]
+        conclusions = [conclusions[i] for i in range(len(conclusions)) if i not in conclusion_ids_to_delete] # 把船新的conclusion拿出来
 
         # Determine whether all assumptions are existent and true, if there are no assumptions, it is true
+        # 确定每个assumption,是不是都已经被证明过了,也就是说是不是在conclusions里面
+        
         all_assumptions_true = self._logic_statements_exist_and_are_proven(assumptions)
+        
         # Determine whether all conclusions are existent and true, if there are no assumptions, it is true
         all_conclusions_true = self._logic_statements_exist_and_are_proven(conclusions)
 
@@ -188,12 +245,12 @@ class Prover:
             return None
 
         assumption_ids = self.add_logic_statements(assumptions)
-        conclusion_ids = self.add_logic_statements(conclusions)
+        conclusion_ids = self.add_logic_statements(conclusions) # 其实这个就是把新的conclusions给append进去
 
         # Determine whether there are new conclusions
-        num_gt_before = len(self.ground_truth_ids)
-        if not all_conclusions_true:
-            if all_assumptions_true:
+        num_gt_before = len(self.ground_truth_ids) 
+        if not all_conclusions_true: 
+            if all_assumptions_true: # 在所有assumption都是gt的前提下，把不是gt的conclusion放进gt里面
                 self.ground_truth_ids.extend(conclusion_ids)
         num_gt_after = len(self.ground_truth_ids)
         if num_gt_after > num_gt_before:
@@ -203,18 +260,20 @@ class Prover:
 
         # Get the assumptions that have not been proven yet and substitute the objectives
         # if the original objectives are conclusions
+        # 把没有被证明的assumption放进objectives里面，
+        # 在forward的过程中，应该没有任何objectives
         unproven_assump_ids = [assump_id for assump_id in assumption_ids
-                               if (not self.logic_statement_connected(assump_id))
-                               and (assump_id not in conclusion_ids)]
-
+                            if (not self.logic_statement_connected(assump_id))
+                            and (assump_id not in conclusion_ids)]
+        
         obj_ids_before = set(self.objective_ids)
         indices_to_delete = []
         for obj_id in self.objective_ids:
-            if self.logic_statement_connected(obj_id):
+            if self.logic_statement_connected(obj_id): # 如果已被证明
                 indices_to_delete.append(obj_id)
-            elif obj_id in conclusion_ids:
+            elif obj_id in conclusion_ids: # 如果刚刚被证明
                 indices_to_delete.append(obj_id)
-                self.objective_ids.extend(unproven_assump_ids)
+                self.objective_ids.extend(unproven_assump_ids) # 只有正好证明了一个obj，才会把unproven_assump_ids放进去
             else:
                 pass
         self.objective_ids = [i for i in self.objective_ids if i not in indices_to_delete]
@@ -238,7 +297,7 @@ class Prover:
 
         return {
             "assumption_ids": assumption_ids,
-            "conclusion_ids": conclusion_ids,
+            "conclusion_ids": conclusion_ids, # 这里面都是新产生的conclusions和assumptions
             "progress": progress
         }
 
@@ -258,6 +317,18 @@ class Prover:
                 # Delete the logic statement from objectives if it is proven or trivial
                 if self.logic_statement_connected(obj_id) or self._trivial(self.ls_id2ls[obj_id]):
                     ids_to_delete.append(self.objective_ids[ind])
+                else:
+                    if self.ls_id2ls[obj_id].logic_function.name == 'Equivalent':
+                        lhs, rhs = sub_tree_diff(self.ls_id2ls[obj_id])
+                        if (lhs != None) and (rhs != None):
+                            simplified_objs = [necessary_logic_functions['Equivalent'].execute_lf([lhs, rhs]),
+                                            necessary_logic_functions['Equivalent'].execute_lf([rhs, lhs])]
+                            for simplified_obj in simplified_objs:
+                                if simplified_obj.name in self.ls_name2id.keys():
+                                    simplified_obj_id = self.ls_name2id[simplified_obj.name]
+                                    if self.logic_statement_connected(simplified_obj_id):
+                                        ids_to_delete.append(self.objective_ids[ind])
+                                        break
 
             self.objective_ids = [ind for ind in self.objective_ids if ind not in ids_to_delete]
 

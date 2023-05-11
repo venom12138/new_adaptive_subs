@@ -29,7 +29,8 @@ def get_args():
                         help="whether to use the axiom combinations to generate orders on the fly")
     parser.add_argument("-nooc", "--num_order_or_combo", required=False, type=int, default=-1,
                         help="number of orders or combos to use")
-
+    parser.add_argument("--max_mode", required=True, type=int, default=0,
+                        help="max length or length", choices=[0,1])
     # training settings
     parser.add_argument("--cuda", action='store_true',
                         help="how many total updates")

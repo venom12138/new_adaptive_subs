@@ -13,13 +13,14 @@ OUTPUT_START_LEXEME = '@'
 BOS_LEXEME = '?'
 
 
-
 MULTI_CHAR_LEXEMES = [
     '1/',
     '^2',
     'sqrt',
     r'\leq ',
     r'\geq ',
+    r'\gt',
+    r'\lt',
     # We haven't use inequalities in INT yet, so not sure if '\leq' and '\geq'
     # work properly.
 ]
@@ -38,10 +39,10 @@ VOCABULARY = (
             ')',
             '*',
             '+',
-            '0',
-            '1',
             '-',  # both subtraction and unary minus
+            '^',
         ] +
+        [str(i) for i in range(11)] + 
         list(string.ascii_lowercase) +
         MULTI_CHAR_LEXEMES
 )
@@ -56,8 +57,8 @@ assert STR_TO_TOKEN[BOS_LEXEME] == 0
 assert STR_TO_TOKEN[PADDING_LEXEME] == 1
 assert STR_TO_TOKEN[EOS_LEXEME] == 2
 assert STR_TO_TOKEN[OUTPUT_START_LEXEME] == 3
-
-assert len(TOKEN_TO_STR) == 46
+# print(f"len(TOKEN_TO_STR):{len(TOKEN_TO_STR)}")
+assert len(TOKEN_TO_STR) == 58 # 46
 
 
 def split_expression_on_lexeme(expr, lexeme):

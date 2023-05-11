@@ -9,12 +9,12 @@ from utils.general_utils import readable_num
 
 class JobTrainSokoban(Job):
     def __init__(self,
-                 dataset,
-                 dump_folder,
-                 steps_into_future,
-                 epochs,
-                 epochs_checkpoints
-                 ):
+                dataset,
+                dump_folder,
+                steps_into_future,
+                epochs,
+                epochs_checkpoints
+                ):
 
         self.goal_generating_network = ConditionalGoalPredictorSokoban()
         self.dataset = dataset

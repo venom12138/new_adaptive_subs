@@ -7,8 +7,8 @@ run.job_class = @jobs.TrainHfForIntValue
 TrainHfForIntValue.n_iterations = 1750
 TrainHfForIntValue.epochs_per_iteration = 1
 TrainHfForIntValue.eval_every_n_iterations = 5
-TrainHfForIntValue.n_proofs = 2000
-TrainHfForIntValue.n_val_proofs = 100
+TrainHfForIntValue.n_proofs = 10 # 2000
+TrainHfForIntValue.n_val_proofs = 10 # 100
 TrainHfForIntValue.fresh_dataset_per_iteration = True
 TrainHfForIntValue.n_samples_per_proof = 2
 
@@ -19,6 +19,7 @@ InverseSqrtWithWarmup.warmup_steps = 4000
 
 generate_problems.proof_length = 15
 generate_problems.n_workers = 8
+generate_problems.max_length_mode = True
 
 TrainHfForIntValue.fp16 = True
 TrainHfForIntValue.init_hf_seed = 42

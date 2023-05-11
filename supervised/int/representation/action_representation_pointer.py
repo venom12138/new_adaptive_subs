@@ -4,8 +4,10 @@ import string
 from supervised.int.utils import theorem_names
 from metric_logging import log_text
 from supervised.int.representation import base
-from visualization import seq_parse
-from visualization.seq_parse import entity_to_seq_string
+from third_party.INT.visualization import seq_parse
+from third_party.INT.visualization.seq_parse import entity_to_seq_string
+import pdb
+import time
 
 CONDITION_LEXEME = '&'
 OBJECTIVE_LEXEME = '#'
@@ -23,6 +25,8 @@ MULTI_CHAR_LEXEMES = [
     'sqrt',
     r'\leq ',
     r'\geq ',
+    r'\gt',
+    r'\lt',
     ADD_CHAR_LEXEME,
     REMOVE_CHAR_LEXEME
     # We haven't use inequalities in INT yet, so not sure if '\leq' and '\geq'
@@ -42,15 +46,15 @@ VOCABULARY = (
             ')',
             '*',
             '+',
-            '0',
-            '1',
             '-',  # both subtraction and unary minus
-        ] +
+            '^'
+        ] + 
+        [str(i) for i in range(11)] + 
         list(string.ascii_lowercase) +
         MULTI_CHAR_LEXEMES
 )
 
-AXIOM_TOKENS = [char for char in 'ABCDEFGHIJKLMNOPQR']
+AXIOM_TOKENS = [char for char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZαβγδ']
 AXIOM_TO_CHAR = {axiom: char for axiom, char in zip(theorem_names, AXIOM_TOKENS)}
 CHAR_TO_AXIOM = {char: axiom for axiom, char in zip(theorem_names, AXIOM_TOKENS)}
 
@@ -60,6 +64,8 @@ POINTER_SYMBOLS = [
     '~',
     '!',
     ';',
+    '|',
+    ':'
 ]
 
 VERIFICATOR_TOKENS = AXIOM_TOKENS[:2]
@@ -75,8 +81,10 @@ assert STR_TO_TOKEN[BOS_LEXEME] == 0
 assert STR_TO_TOKEN[PADDING_LEXEME] == 1
 assert STR_TO_TOKEN[EOS_LEXEME] == 2
 assert STR_TO_TOKEN[OUTPUT_START_LEXEME] == 3
-assert len(TOKEN_TO_STR) == 68
-
+assert len(TOKEN_TO_STR) == 94 # 68
+# EntityMask就是left_str + entity + right_str等于原本的Entity，所谓的mask就是把中间的entity给mask掉了
+# 但是add_interior之后，就把中间mask掉的entity部分给补回来，
+# mask()函数的返回值就又是整个的Entity了，很费解
 class EntityMask:
     def __init__(self, entity, left_str, right_str):
         self.entity = entity
@@ -95,8 +103,14 @@ def generate_masks_for_logic_statement(logic_statement, symbol='~'):
         operator = '\geq '
     elif logic_statement.name.startswith("SmallerOrEqual"):
         operator = '\leq '
-    else:
+    elif logic_statement.name.startswith("Equivalent"):
         operator = '='
+    elif logic_statement.name.startswith("Bigger"):
+        operator = '\gt '
+    elif logic_statement.name.startswith("Smaller"):
+        operator = '\lt '
+    else:
+        raise NotImplementedError
 
     first_operand = logic_statement.operands[0]
     second_operand = logic_statement.operands[1]
@@ -105,7 +119,8 @@ def generate_masks_for_logic_statement(logic_statement, symbol='~'):
 
     first_operand_mask = EntityMask(first_operand, '',
                                     operator + second_operand_str)
-    second_operand_mask = EntityMask(second_operand, first_operand_str+operator, '')
+    second_operand_mask = EntityMask(second_operand, 
+                                    first_operand_str + operator, '')
     operands_with_mask_queue = [first_operand_mask, second_operand_mask]
     all_masks = [first_operand_mask, second_operand_mask]
     while len(operands_with_mask_queue) > 0:
@@ -133,8 +148,10 @@ def parse_mask_for_entity(entity_with_mask, operands_with_mask_queue,  all_masks
         entity_type = '-'
     elif entity_name.startswith("mul"):
         entity_type = '*'
+    elif entity_name.startswith("pow"):
+        entity_type = '^'
 
-    if entity_type in {'+', '-', '*'}:
+    if entity_type in {'+', '-', '*', '^'}:
         first_operand = entity.operands[0]
         second_operand = entity.operands[1]
         first_operand_str = entity_to_seq_string(first_operand)
@@ -151,7 +168,7 @@ def parse_mask_for_entity(entity_with_mask, operands_with_mask_queue,  all_masks
     elif entity_name.startswith("opp"):
         operand = entity.operands[0]
         operand_str = entity_to_seq_string(operand)
-        operand_mask = EntityMask(operand, left_str + '(-', ')' + right_str)
+        operand_mask = EntityMask(operand, left_str + '(-', ')' + right_str) # left_str + '(-' + operand + ')' + right_str就是原本的表达式
         entity_with_mask.add_interior('(-' + symbol + operand_str + ')')
         operands_with_mask_queue.append(operand_mask)
         all_masks.append(operand_mask)
@@ -179,6 +196,24 @@ def parse_mask_for_entity(entity_with_mask, operands_with_mask_queue,  all_masks
         entity_with_mask.add_interior('(1/' + symbol + operand_str + ')')
         operands_with_mask_queue.append(operand_mask)
         all_masks.append(operand_mask)
+        
+    elif entity_name.startswith("root"):
+        operand = entity.operands[0]
+        operand_str = entity_to_seq_string(operand)
+        operand_mask = EntityMask(operand, left_str + '(sqrt', ')' + right_str)
+        entity_with_mask.add_interior('(sqrt' + symbol  + operand_str + ')')
+        operands_with_mask_queue.append(operand_mask)
+        all_masks.append(operand_mask)
+    
+    # elif entity_name.startswith("pow"):
+    #     raise KeyError
+    #     operand = entity.operands[0]
+    #     operand_str = entity_to_seq_string(operand)
+    #     operand_mask = EntityMask(operand, left_str + '(sqrt', ')' + right_str)
+    #     entity_with_mask.add_interior('(sqrt' + symbol  + operand_str + ')')
+    #     operands_with_mask_queue.append(operand_mask)
+    #     all_masks.append(operand_mask)
+        
     else:
         entity_str = entity_to_seq_string(entity)
         entity_mask = EntityMask(entity, left_str, right_str)
@@ -257,12 +292,13 @@ class ActionRepresentationPointer(base.Representation):
 
     @staticmethod
     def find_diff(current_state_str, destination_state_str):
-
         expressions_to_change = {
             '1/': '~',
             '^2': '!',
             '\geq ' : '%',
-            '\leq ' : ';'
+            '\leq ' : ';',
+            '\gt ' : '|', # add this two
+            '\lt ' : ':',
         }
         for expression, target in expressions_to_change.items():
             current_state_str = current_state_str.replace(expression, target)
@@ -304,16 +340,24 @@ class ActionRepresentationPointer(base.Representation):
     @classmethod
     def proof_state_to_tokenized_objective(cls, state):
         state_objective = [seq_parse.logic_statement_to_seq_string(objective)
-                                  for objective in state['observation']['objectives']
-                                  ][0]
+                                for objective in state['observation']['objectives']
+                                ][0]
         return cls.tokenize_formula(state_objective)
 
     @classmethod
     def proof_step_and_action_to_formula(cls, proof_step, action):
         '''this version of code assumes there is exactly one objective'''
-        objective = proof_step['observation']['objectives'][0]
-        return cls.action_to_formula(objective, action)
-
+        # print(f"proof_step:{proof_step['lemma']}")
+        if len(proof_step['observation']['objectives']) > 1:
+            intersection_objs = set(proof_step['next_objectives']).intersection(set(proof_step['observation']['objectives']))
+            diff_objectives = set(proof_step['observation']['objectives']).difference(intersection_objs)
+            diff_objectives = list(diff_objectives)
+            assert len(diff_objectives) == 1
+            return cls.action_to_formula(diff_objectives[0], action) 
+            # 
+        else:
+            objective = proof_step['observation']['objectives'][0]
+            return cls.action_to_formula(objective, action)
 
     @classmethod
     def action_to_formula(cls, objective, action):
@@ -321,7 +365,7 @@ class ActionRepresentationPointer(base.Representation):
         used_axiom = action[0]
         formula = OUTPUT_START_LEXEME + AXIOM_TO_CHAR[used_axiom]
         entity_to_mask, mask_to_entity = generate_masks_for_logic_statement(objective, symbol='~')
-        masks = [entity_to_mask[entity] for entity in action[1:]]
+        masks = [entity_to_mask[entity] for entity in action[1:]]    
         formula += cls.merge_masks(masks) + EOS_LEXEME
         return formula
 

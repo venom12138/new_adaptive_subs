@@ -96,8 +96,6 @@ class BestFSSolverRubik(GeneralSolver):
             print(f'val = {curr_val} | {current_node.state}')
             expanded_nodes += 1
 
-            # print(logic_statement_to_seq_string(current_node.state['observation']['objectives'][0]))
-
             if current_node.depth < self.max_tree_depth:
                 goals, solving_subgoal = self.goal_builder.build_goals(current_node.state)
 

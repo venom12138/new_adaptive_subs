@@ -77,12 +77,26 @@ def parse(entity_name):
         entity_name = entity_name.lstrip("(")
         entity_name = entity_name.rstrip(")")
         return "(" + r"\sqrt(" + parse(entity_name) + "))"
+    elif entity_name.startswith("root"):
+        outmost_numerical_function = "root"
+        entity_name = entity_name.lstrip(outmost_numerical_function)
+        entity_name = entity_name.lstrip("(")
+        entity_name = entity_name.rstrip(")")
+        return "(" + r"\sqrt(" + parse(entity_name) + "))"
     elif entity_name.startswith("inv"):
         outmost_numerical_function = "inv"
         entity_name = entity_name.lstrip(outmost_numerical_function)
         entity_name = entity_name.lstrip("(")
         entity_name = entity_name.rstrip(")")
         return "(" + r"\frac{1}{" + parse(entity_name) + "})"
+    elif entity_name.startswith("pow"):
+        outmost_numerical_function = "pow"
+        entity_name = entity_name.lstrip(outmost_numerical_function)
+        entity_name = entity_name.lstrip("(")
+        entity_name = entity_name.rstrip(")")
+        two_operands = extract_two_operands(entity_name)
+        two_operands_latex = [parse(operand) for operand in two_operands]
+        return "(" + "^".join(two_operands_latex) + ")"
     else:
         return entity_name
 
@@ -127,7 +141,15 @@ def logic_statement_to_latex(logic_statement, string=False):
         logic_statement_name = logic_statement_name.rstrip(")")
         two_operands = extract_two_operands(logic_statement_name)
         two_operands_latex = [parse(operand) for operand in two_operands]
-        return r"\geq ".join(two_operands_latex)
+        return r"≥".join(two_operands_latex)
+    elif logic_statement_name.startswith("Bigger"):
+        logic_function_name = "Bigger"
+        logic_statement_name = logic_statement_name.lstrip(logic_function_name)
+        logic_statement_name = logic_statement_name.lstrip("(")
+        logic_statement_name = logic_statement_name.rstrip(")")
+        two_operands = extract_two_operands(logic_statement_name)
+        two_operands_latex = [parse(operand) for operand in two_operands]
+        return r">".join(two_operands_latex)
     elif logic_statement_name.startswith("SmallerOrEqual"):
         logic_function_name = "SmallerOrEqual"
         logic_statement_name = logic_statement_name.lstrip(logic_function_name)
@@ -135,7 +157,15 @@ def logic_statement_to_latex(logic_statement, string=False):
         logic_statement_name = logic_statement_name.rstrip(")")
         two_operands = extract_two_operands(logic_statement_name)
         two_operands_latex = [parse(operand) for operand in two_operands]
-        return r"\leq ".join(two_operands_latex)
+        return r"≤".join(two_operands_latex)
+    elif logic_statement_name.startswith("Smaller"):
+        logic_function_name = "Smaller"
+        logic_statement_name = logic_statement_name.lstrip(logic_function_name)
+        logic_statement_name = logic_statement_name.lstrip("(")
+        logic_statement_name = logic_statement_name.rstrip(")")
+        two_operands = extract_two_operands(logic_statement_name)
+        two_operands_latex = [parse(operand) for operand in two_operands]
+        return r"<".join(two_operands_latex)
     elif logic_statement_name.startswith("Equivalent"):
         logic_function_name = "Equivalent"
         logic_statement_name = logic_statement_name.lstrip(logic_function_name)
@@ -152,6 +182,7 @@ def step_to_latex(step):
     step_string = ""
     step_string += "The observation: \n"
     step_string += "Ground truth:\n"
+    # print(f"step:{step}")
     for gt in step["observation"]["ground_truth"]:
         step_string += "\t{}\n".format(logic_statement_to_latex(gt))
     step_string += "Objective:\n"

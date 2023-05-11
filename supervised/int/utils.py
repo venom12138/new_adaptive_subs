@@ -1,5 +1,5 @@
-from proof_system.all_axioms import all_axioms_to_prove
-from visualization import seq_parse
+from third_party.INT.proof_system.all_axioms import all_axioms_to_prove
+from third_party.INT.visualization import seq_parse
 
 theorem_names = [theorem.name for theorem in list(all_axioms_to_prove.values())]
 thm2index = {

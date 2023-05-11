@@ -1,7 +1,6 @@
 from envs.int.theorem_prover_env import TheoremProverEnv
 from policies import VanillaPolicyINT
 from policies.int.transformer_conditional_policy_pointer import SubgoalPursuitData, SubgoalPath
-from supervised.int.gen_subgoal_data import generate_problems
 from supervised.int.utils import count_objectives
 from visualization.seq_parse import logic_statement_to_seq_string
 

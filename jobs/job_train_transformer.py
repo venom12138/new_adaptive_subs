@@ -83,7 +83,6 @@ class HfTrainingPipeline(Job):
     def __init__(
             self,
             tokenizer,
-
             model_class=transformers.MBartForConditionalGeneration,
             config_path=gin.REQUIRED,
             model_config_overrides=None,
@@ -211,6 +210,7 @@ class HfTrainingPipeline(Job):
             config_path=self.config_path,
             overrides_dict=self.model_config_overrides.dict
         )
+        # print(f"config_dict: {config_dict}")
         config = self.model_class.config_class(**config_dict)
         log_text('Model config', config.to_json_string(use_diff=False))
 

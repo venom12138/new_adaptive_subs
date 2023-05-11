@@ -11,7 +11,10 @@ def _copy_input(inputs):
         copy_inputs.append(deepcopy(inp))
     return copy_inputs
 
-
+# input_no是input_number
+# execute_lf是execute_logic_function
+# 返回的是一个操作后的证明树，
+# logic_function包含等于，小于等于，大于等于运算
 class LogicFunction:
     def __init__(self, name, input_no):
         self.name = name
@@ -21,9 +24,9 @@ class LogicFunction:
         if self.input_no:
             if len(inputs) != self.input_no:
                 raise AssertionError("Required {} inputs but got {}.".format(self.input_no, len(inputs)),
-                                     "Input number mismatch.")
+                                    "Input number mismatch.")
         new_degree = 1
-        inputs = _copy_input(inputs)
+        inputs = _copy_input(inputs) # deepcopy了一下 inputs
         return LogicStatement(
             logic_function=self,
             operands=inputs, degree=new_degree
@@ -32,7 +35,9 @@ class LogicFunction:
     def to_string(self):
         return self.name
 
-
+# 返回的是一个操作后的节点
+# numerical_function包含加减乘除等运算
+# 这些运算本质上是对于不同的运算数的操作
 class NumericalFunction:
     def __init__(self, name, input_no=None):
         self.name = name
@@ -42,7 +47,8 @@ class NumericalFunction:
         if self.input_no:
             if len(inputs) != self.input_no:
                 raise AssertionError("Required {} inputs but got {}.".format(self.input_no, len(inputs)),
-                                     "Input number mismatch.")
+                                    "Input number mismatch.")
+        # degree is the number of operations
         new_degree = sum(operand.degree for operand in set(inputs)) + 1
         # make unique leaf node (ground entities)
         inputs = _copy_input(inputs)
@@ -51,9 +57,9 @@ class NumericalFunction:
     def to_string(self):
         return self.name
 
-
+# Entity是节点类
 class Entity:
-    def __init__(self, name=None, recent_numerical_function=None, operands=None, is_iv=False, is_constant=False, degree=0):
+    def __init__(self, name=None, recent_numerical_function=None, operands=None, is_iv=False, is_constant=False, degree=0, sign=None):
         self.degree = degree
         self.index = None
         self.parent_index = None
@@ -68,33 +74,46 @@ class Entity:
             self.update_name()
         self.is_constant = is_constant
         self.iv = is_iv
-
+        self.sign = sign
+    
+    # 这个起名字非常牛逼,其实就是一个递归式的起名字, 不断嵌套
     def update_name(self):
-        self.name = (self.recent_numerical_function.name +
-                     " ( " + " , ".join([inp.to_string() for inp in self.operands]) + " )")
+        if self.recent_numerical_function is not None:
+            self.name = (self.recent_numerical_function.name +
+                        " ( " + " , ".join([inp.to_string() for inp in self.operands]) + " )")
 
+    def __str__(self):
+        return self.name
+    
+    def __repr__(self):
+        return self.name
+    
     def to_string(self):
         return self.name
 
-
+# LogicStatement是证明树类，但其实本质上entity就是一个链表，也可以被当成是一个证明树，只是LogicStatement把它们给显示的表达出来了，用一个dict的形式
+# 根节点就是这个logic_function，由这个logic_function将几个operands给连接起来了
 class LogicStatement:
     def __init__(self, logic_function, operands, degree=1, premise=None):
         self.logic_function = logic_function
-        self.operands = operands
+        self.operands = operands # operands 表示逻辑语句的操作数
         self.degree = degree
-        self.premise = premise
-        self.indexing()
+        self.premise = premise # premise 表示逻辑语句的前提
+        self.indexing() # 也就是说，默认会把这棵树给搞出来
         self.update_name()
-
+        
+    # indexing() 方法用于将LogicStatement的所有实例赋予唯一id索引
+    # 这个函数用来创造一个证明树
     def indexing(self):
         node_count = []
         self.ent_dic = {0: self}
         self.ent = []
         def _graph_index(entity, parent_index):
-            if entity.operands is None:
+            entity.update_name()
+            if entity.operands is None: # 这里是递归的终点，也就是到达最后的叶子节点，也就是单子元素，比如：a，b,1
                 assert entity not in self.ent
                 node_count.append(1)
-                entity.index = len(node_count)
+                entity.index = len(node_count) 
                 entity.parent_index = parent_index
                 entity.root = self
                 self.ent_dic[entity.index] = entity
@@ -102,15 +121,16 @@ class LogicStatement:
             else:
                 assert entity not in self.ent
                 node_count.append(1)
-                entity.index = len(node_count)
-                entity.parent_index = parent_index
+                entity.index = len(node_count) # index从1开始
+                entity.parent_index = parent_index # self的index其实是0,他的操作数都是他的子孙们,后面的节点的parent是前面的节点的index
                 entity.root = self
-                self.ent_dic[entity.index] = entity
+                self.ent_dic[entity.index] = entity # 建一个字典, key是index, value是entity
                 self.ent.append(entity)
-                for ent in entity.operands:
+                for ent in entity.operands: # 递归的生成树
                     _graph_index(ent, entity.index)
         for ent in self.operands:
             _graph_index(ent, 0)
+        self.update_name()
 
     def update_name(self):
         def _update_name(entity):
@@ -121,8 +141,14 @@ class LogicStatement:
         for ent in self.operands:
             _update_name(ent)
         self.name = (self.logic_function.name +
-                     " ( " + " , ".join([inp.to_string() for inp in self.operands]) + " )")
+                    " ( " + " , ".join([inp.to_string() for inp in self.operands]) + " )")
 
+    def __str__(self):
+        return self.name
+    
+    def __repr__(self):
+        return self.name
+    
     def to_string(self):
         return self.name
 
@@ -178,7 +204,6 @@ class Theorem:
 
     def to_string(self, input_strings=None):
         """
-
         :return: the human-readable representation of a theorem in string
         """
         if not input_strings:
@@ -223,7 +248,8 @@ class Proof:
         raw_observation["lemmas"] = self.lemmas
         raw_observation["objectives"] = self.objectives
         return raw_observation
-
+    
+    # apply_theorem() 方法用给定操作数执行定理，并将该定理的所有前提添加到可用前提的列表中
     def apply_theorem(self, theorem, operands):
         results = theorem.execute_th(operands)
         assumptions, conclusions = \
@@ -325,7 +351,7 @@ class Proof:
         if reward > 0:
             reward = reward * math.exp(reward_scaling_temp * theorem.input_no)
         return reward, reward_string, conclusions
-
+    # statements_all_valid() 方法用于验证给定语句列表中的所有语句是否都在可用前提列表中
     def statements_all_valid(self, statements):
         ground_truth_strings = [gs.name for gs in self.ground_truth]
         for stn in statements:

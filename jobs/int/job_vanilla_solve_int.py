@@ -13,7 +13,7 @@ from supervised.int.gen_subgoal_data import generate_problems
 
 from utils.general_utils import readable_num
 from utils.utils_sokoban import draw_and_log
-from visualization.seq_parse import logic_statement_to_seq_string, entity_to_seq_string
+from third_party.INT.visualization.seq_parse import logic_statement_to_seq_string, entity_to_seq_string
 
 
 def solve_problem(vanilla_policy, input_state):

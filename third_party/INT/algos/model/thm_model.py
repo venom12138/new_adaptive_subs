@@ -92,7 +92,7 @@ class ThmNet(torch.nn.Module):
 
     def __init__(self, **options):
         super().__init__()
-        num_nodes = options["num_nodes"]
+        num_nodes = options["num_nodes"] # 所有可能出现的符号作为node数
         num_lemmas = options["num_lemmas"]
         hidden_dim = options["hidden_dim"]
         gnn_type = options["gnn_type"]
@@ -221,7 +221,7 @@ class ThmNet(torch.nn.Module):
         else:
             lemma_m = Categorical(probs=self.softmax(lemma_outputs))
             lemma_actions = lemma_m.sample()
-            lemma_args = [theorem_no_input[index2thm[int(lemma)]] for lemma in lemma_actions]
+            lemma_args = [theorem_no_input[index2thm[int(lemma)]] for lemma in lemma_actions] # lemma_args 指的是每个lemma的输入个数
             max_num_ent = 4
             masks = -1 * torch.ones(len(lemma_args), max_num_ent)
             for i in range(len(lemma_args)):
@@ -238,7 +238,7 @@ class ThmNet(torch.nn.Module):
         # Prepare for entity actions
         ent_mask = compute_mask(obj_node_ent, gt_node_ent)
         rev_trans_ind = compute_trans_ind(obj_trans_ind, gt_trans_ind)
-        ent_rep = torch.index_select(state_tensor[ent_mask, :].clone(), 0, rev_trans_ind)
+        ent_rep = torch.index_select(state_tensor[ent_mask, :].clone(), 0, rev_trans_ind) # 从第0维中挑选，index是rev_trans_ind
         if actions is None:
             entity_actions = []
             h_uniform = Uniform(torch.zeros(ent_rep.shape[0]), torch.ones(ent_rep.shape[0]))
@@ -272,7 +272,7 @@ class ThmNet(torch.nn.Module):
                     entity_action = ((entity_action.float() + 1) * mask.float()).long()
                     entity_action = torch.cat(
                         [entity_action,
-                         torch.zeros(masks.shape[0] - entity_action.shape[0]).long().to(device)])
+                        torch.zeros(masks.shape[0] - entity_action.shape[0]).long().to(device)])
                     entity_actions.append(entity_action)
             entity_actions = torch.stack(entity_actions).t()
             entity_actions = torch.cat([entity_actions,

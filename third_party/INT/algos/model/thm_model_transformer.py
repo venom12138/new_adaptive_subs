@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from algos.gnns import FCResBlock
+from algos.model.gnns import FCResBlock
 from algos.transformer.modules.models import make_thm_model
 from torch_geometric.data import Batch
 from torch.distributions import Categorical, Uniform
@@ -516,7 +516,7 @@ class ThmNet(torch.nn.Module):
                 entity_action = ((entity_action.float() +1) * mask.float()).long()
                 entity_action = torch.cat(
                     [entity_action,
-                     torch.zeros(masks.shape[0]- entity_action.shape[0]).long().to(device)])
+                    torch.zeros(masks.shape[0]- entity_action.shape[0]).long().to(device)])
                 entity_actions.append(entity_action)
         entity_actions = torch.stack(entity_actions).T
         # print([index2thm[int(lemma)] for lemma in lemma_actions])

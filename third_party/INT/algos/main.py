@@ -21,7 +21,7 @@ import torch.utils.data as data_handler
 from algos.eval import eval_agent
 from algos.lib.obs import nodename2index, thm2index, batch_process
 from algos.lib.arguments import get_args
-from data_generation.generate_problems import generate_multiple_problems
+from data_generation.multi_path_generate_problems import generate_multiple_problems
 from data_generation.utils import Dataset
 
 timestamp = str(datetime.fromtimestamp(time())).replace(" ", "_").replace(":", "_").replace("-", "_").replace(".", "_")
@@ -251,23 +251,23 @@ def train_eval_test(model, optimizer, kl_dict=None, all_data=None, resume_dir=No
 
     if not args.online:
         (train_dataset, val_dataset, eval_dataset, train_first_dataset,
-         val_first_dataset, eval_first_dataset) = (all_data["train"], all_data["val"], all_data["test"],
-                                                   all_data["train_first"], all_data["val_first"],
-                                                   all_data["test_first"])
+        val_first_dataset, eval_first_dataset) = (all_data["train"], all_data["val"], all_data["test"],
+                                                    all_data["train_first"], all_data["val_first"],
+                                                    all_data["test_first"])
     else:
         val_dataset = Dataset([])
         eval_dataset = Dataset([])
         eval_first_dataset = Dataset([])
         for kl in args.test_sets:
-            k = kl.split("_")[0][-1]
-            l = int(kl[-1])
+            k = int(kl.split("_")[0].split('=')[-1])
+            l = int(kl.split("_")[1].split('=')[-1])
 
             data_path = os.path.join(args.combo_path,
-                                     "test_first_dataset_prob{}_k{}l{}_oog{}_nooc{}_degree{}.pkl".format(
-                                         args.num_probs, k, l,
-                                         args.online_order_generation, args.num_order_or_combo,
-                                         args.degree)
-                                     )
+                                    "test_first_dataset_prob{}_k{}l{}_oog{}_nooc{}_degree{}.pkl".format(
+                                        args.num_probs, k, l,
+                                        args.online_order_generation, args.num_order_or_combo,
+                                        args.degree)
+                                    )
 
             if os.path.isfile(data_path):
                 with pickle.load(open(data_path, "rb")) as existent_dataset:
@@ -277,14 +277,15 @@ def train_eval_test(model, optimizer, kl_dict=None, all_data=None, resume_dir=No
                     keyword_arguments = {"combos": kl_dict}
                 else:
                     keyword_arguments = {"orders": kl_dict}
-                one_piece_of_data, _ = generate_multiple_problems(k, l, num_probs=args.num_probs,
-                                                                  train_test="test", backwards=True,
-                                                                  transform_gt=args.transform_gt, degree=args.degree,
-                                                                  num_order_or_combo=args.num_order_or_combo,
-                                                                  **keyword_arguments)
-
-                eval_dataset.merge(one_piece_of_data["all"])
-                eval_first_dataset.merge(one_piece_of_data["all_first"])
+                
+                one_piece_of_data, _ = generate_multiple_problems(num_axioms=k, max_length=0, length=l, num_probs=args.num_probs,
+                                                                        train_test="test", backwards=True,
+                                                                        transform_gt=args.transform_gt, degree=args.degree,
+                                                                        num_order_or_combo=args.num_order_or_combo,
+                                                                    **keyword_arguments) # 生成指定length的题目
+                # one_piece_of_data = one_piece_of_data[f"k={k}l={l}"]
+                eval_dataset.merge(one_piece_of_data["all"][f"k={k}l={l}"])
+                eval_first_dataset.merge(one_piece_of_data["all_first"][f"k={k}l={l}"])
 
         eval_objectives = set([problem[0]["objectives"][0].name for problem in eval_first_dataset])
 
@@ -318,21 +319,30 @@ def train_eval_test(model, optimizer, kl_dict=None, all_data=None, resume_dir=No
             train_dataset = Dataset([])
             train_first_dataset = Dataset([])
             for kl in args.train_sets:
-                k = kl.split("_")[0][-1]
-                l = int(kl[-1])
+                k = int(kl.split("_")[0].split('=')[-1])
+                l = int(kl.split("_")[1].split('=')[-1])
 
                 if args.online_order_generation:
                     keyword_arguments = {"combos": kl_dict}
                 else:
                     keyword_arguments = {"orders": kl_dict}
-                one_piece_of_data, _ = generate_multiple_problems(k, l, num_probs=args.num_probs,
-                                                                  train_test="train", backwards=True,
-                                                                  transform_gt=args.transform_gt, degree=args.degree,
-                                                                  num_order_or_combo=args.num_order_or_combo,
-                                                                  avoid_objective_names=eval_objectives,
-                                                                  **keyword_arguments)
-                train_dataset.merge(one_piece_of_data["all"])
-                train_first_dataset.merge(one_piece_of_data["all_first"])
+                if args.max_mode:
+                    one_piece_of_data, _ = generate_multiple_problems(num_axioms=k, max_length=l, num_probs=args.num_probs,
+                                                                    train_test="train", backwards=True,
+                                                                    transform_gt=args.transform_gt, degree=args.degree,
+                                                                    num_order_or_combo=args.num_order_or_combo,
+                                                                    avoid_objective_names=eval_objectives,
+                                                                    **keyword_arguments)
+                else:
+                    one_piece_of_data, _ = generate_multiple_problems(num_axioms=k, max_length=0, length=l, num_probs=args.num_probs,
+                                                                    train_test="train", backwards=True,
+                                                                    transform_gt=args.transform_gt, degree=args.degree,
+                                                                    num_order_or_combo=args.num_order_or_combo,
+                                                                    avoid_objective_names=eval_objectives,
+                                                                    **keyword_arguments)
+                # one_piece_of_data = one_piece_of_data[f"k={k}l={l}"]
+                train_dataset.merge(one_piece_of_data["all"][f"k={k}l={l}"])
+                train_first_dataset.merge(one_piece_of_data["all_first"][f"k={k}l={l}"])
 
             new_dataset_success_rate, new_dataset_wrong_case, new_dataset_right_case, new_dataset_avg_proof_length = \
                 test_rollout(model, train_first_dataset)
@@ -444,13 +454,13 @@ def train_eval_test(model, optimizer, kl_dict=None, all_data=None, resume_dir=No
             }
 
             json.dump(cases_record,
-                      open(
-                          os.path.join(
-                              args.dump,
-                              str(timestamp),
-                              "cases_record{0:.0%}.json".format(int(updates / args.updates))),
-                          "w")
-                      )
+                    open(
+                        os.path.join(
+                            args.dump,
+                            str(timestamp),
+                            "cases_record{0:.0%}.json".format(int(updates / args.updates))),
+                        "w")
+                    )
             if test_first_success_rate > best_val_succ:
                 save_checkpoint(model, optimizer, ckpt_dir=os.path.join(args.dump, str(timestamp)), epoch=epoch,
                                 extra=dict(epoch=epoch, updates=updates, best_val_acc=best_val_succ), is_best=True)

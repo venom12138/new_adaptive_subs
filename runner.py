@@ -44,7 +44,7 @@ import metric_logging
 def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--config_file', action='append', default=[],
+        '--config_file', action='append', default=["configs/int/train/proof_len_15/value.gin"],
         help='Gin config files.'
     )
     parser.add_argument(
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
                 except mrunner_client.NeptuneAPITokenException:
                     print('HINT: To run with Neptune logging please set your '
-                          'NEPTUNE_API_TOKEN environment variable')
+                        'NEPTUNE_API_TOKEN environment variable')
 
     gin.parse_config_files_and_bindings(args.config_file, gin_bindings)
     run()

@@ -3,7 +3,6 @@ from transformers import MBartForConditionalGeneration
 
 from metric_logging import log_text
 from supervised.int import InfixRepresentation, hf_data
-from supervised.int.gen_subgoal_data import generate_problems
 from supervised.int.representation import infix
 from utils import hf
 from utils import hf_generate

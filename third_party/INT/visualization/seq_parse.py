@@ -44,6 +44,20 @@ def _entity_name_to_seq_string(entity_name):
         outermost_numerical_function = "inv"
         entity_name = rm_function_and_brackets(entity_name, outermost_numerical_function)
         return "(" + r"1/" + _entity_name_to_seq_string(entity_name) + ")"
+    elif entity_name.startswith("root"):
+        outermost_numerical_function = "root"
+        entity_name = rm_function_and_brackets(entity_name, outermost_numerical_function)
+        return "(" + r"sqrt(" + _entity_name_to_seq_string(entity_name) + "))"
+    elif entity_name.startswith("pow"):
+        outermost_numerical_function = "pow"
+        entity_name = rm_function_and_brackets(entity_name, outermost_numerical_function)
+        two_operands = extract_two_operands(entity_name)
+        two_operands_latex = [_entity_name_to_seq_string(operand) for operand in two_operands]
+        return "(" + "^".join(two_operands_latex) + ")"
+    # elif entity_name.startswith("log"):
+    #     outermost_numerical_function = "log"
+    #     entity_name = rm_function_and_brackets(entity_name, outermost_numerical_function)
+    #     return "(" + r"log" + _entity_name_to_seq_string(entity_name) + ")"
     else:
         return entity_name
 
@@ -65,12 +79,24 @@ def logic_statement_name_to_seq_string(logic_statement_name):
         two_operands = extract_two_operands(logic_statement_name)
         two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
         return r"\geq ".join(two_operands_latex)
+    elif logic_statement_name.startswith("Bigger"):
+        logic_function_name = "Bigger"
+        logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
+        two_operands = extract_two_operands(logic_statement_name)
+        two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
+        return r"\gt".join(two_operands_latex)
     elif logic_statement_name.startswith("SmallerOrEqual"):
         logic_function_name = "SmallerOrEqual"
         logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
         two_operands = extract_two_operands(logic_statement_name)
         two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
         return r"\leq ".join(two_operands_latex)
+    elif logic_statement_name.startswith("Smaller"):
+        logic_function_name = "Smaller"
+        logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
+        two_operands = extract_two_operands(logic_statement_name)
+        two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
+        return r"\lt".join(two_operands_latex)
     elif logic_statement_name.startswith("Equivalent"):
         logic_function_name = "Equivalent"
         logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
@@ -79,6 +105,44 @@ def logic_statement_name_to_seq_string(logic_statement_name):
         return r"=".join(two_operands_latex)
     else:
         raise NotImplementedError
+
+def my_logic_statement_name_to_seq_string(logic_statement_name):
+    logic_statement_name = re.sub(" ", "", logic_statement_name)
+    if logic_statement_name.startswith("BiggerOrEqual"):
+        logic_function_name = "BiggerOrEqual"
+        logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
+        two_operands = extract_two_operands(logic_statement_name)
+        two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
+        return r"≥".join(two_operands_latex)
+    elif logic_statement_name.startswith("Bigger"):
+        logic_function_name = "Bigger"
+        logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
+        two_operands = extract_two_operands(logic_statement_name)
+        two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
+        return r">".join(two_operands_latex)
+    elif logic_statement_name.startswith("SmallerOrEqual"):
+        logic_function_name = "SmallerOrEqual"
+        logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
+        two_operands = extract_two_operands(logic_statement_name)
+        two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
+        return r"≤".join(two_operands_latex)
+    elif logic_statement_name.startswith("Smaller"):
+        logic_function_name = "Smaller"
+        logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
+        two_operands = extract_two_operands(logic_statement_name)
+        two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
+        return r"<".join(two_operands_latex)
+    elif logic_statement_name.startswith("Equivalent"):
+        logic_function_name = "Equivalent"
+        logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
+        two_operands = extract_two_operands(logic_statement_name)
+        two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
+        return r"=".join(two_operands_latex)
+    else:
+        raise NotImplementedError
+
+def my_logic_statement_to_seq_string(logic_statement):
+    return my_logic_statement_name_to_seq_string(logic_statement.name)
 
 
 def logic_statement_to_seq_string(logic_statement):

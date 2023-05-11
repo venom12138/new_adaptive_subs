@@ -9,35 +9,42 @@ import numpy as np
 
 from envs.int.theorem_prover_env import TheoremProverEnv
 from metric_logging import log_text
-from proof_system.all_axioms import axiom_sets
+from third_party.INT.proof_system.all_axioms import axiom_sets
 from supervised.int.int_hacking import sample_axiom_order, \
     generate_problem__single_trial
-from third_party.INT.data_generation.generate_problems import generate_problem
+# from third_party.INT.data_generation.multi_path_generate_problems import generate_problem
 from utils import storage
 
-
 def set_rnd_seed_and_generate_problem(
-    seed, proof_length, available_axioms
+    seed, proof_length, available_axioms, max_length_mode
 ):
-
     random.seed(seed)
     n_axioms = min(proof_length, len(available_axioms))
     problem = None
     while problem is None:
-        order = sample_axiom_order(proof_length, available_axioms)
+        # in max_length_mode, proof_length refers to the max length of problem
+        # in normal mode, proof_length refers to the length of problem
+        order_length = random.choice(range(int(1.5 * proof_length) + 1, int(2.4 * proof_length) + 1))
+        order = sample_axiom_order(order_length, available_axioms)
+        if max_length_mode:
+            kwargs = {}
+        else:
+            kwargs = {'length': proof_length,}
         problem = generate_problem__single_trial(
-            length=proof_length,
             num_axioms=n_axioms,
+            train_test='train',
             backward=True,
             transform_gt=True,  # check this
             degree=0,  # suspicious
             num_order_or_combo=1,
-            orders={f"k{n_axioms}l{proof_length}": [order]},
-            train_test='train',
+            orders={f"k{n_axioms}": [order]},
+            **kwargs
         )
+        if problem != None and max_length_mode and len(problem) > proof_length:
+            problem = None
+            
     last_proof_step = compute_final_statement(problem)
     problem.append(last_proof_step)
-
     return problem
 
 def compute_final_statement(problem):
@@ -67,7 +74,7 @@ def get_available_axioms(axiom_set_name="ordered_field"):
 @gin.configurable
 def generate_problems(
     n_proofs, n_workers=4, proof_length=5,
-    load_from_path=None, seed=None,
+    load_from_path=None, seed=None, max_length_mode=None
 ):
     """
     Args (selected):
@@ -77,6 +84,7 @@ def generate_problems(
             we switch to the ordinary mode - and generate problems on the
             fly from that point.
     """
+    assert max_length_mode != None
     problems = []
     if load_from_path:
         problem_loader = getattr(generate_problems, 'problem_loader', None)
@@ -94,35 +102,44 @@ def generate_problems(
     seeds = rng.integers(low=0, high=2**63, size=n_rem_proofs)
     # seeds = np.random.randint(2 ** 63, size=n_rem_proofs)
     log_text('seeds_for_generate_problems[:5]', str(seeds[:5]))
-
+    
     problems.extend(
         Parallel(n_jobs=n_workers, verbose=9)(
             delayed(set_rnd_seed_and_generate_problem)(
                 seed=seed,
                 proof_length=proof_length,
                 available_axioms=get_available_axioms(),
+                max_length_mode=max_length_mode,
             ) for seed in seeds)
     )
+    # problems.extend(
+    #         [set_rnd_seed_and_generate_problem(
+    #             seed=seed,
+    #             proof_length=proof_length,
+    #             available_axioms=get_available_axioms(),
+    #             max_length_mode=max_length_mode,
+    #         ) for seed in seeds]
+    # )
     assert len(problems) == n_proofs
     return problems
 
 
-def generate_problems_from_kl_dict(n_proofs, kl_dict):
-    # This function is deprecated, as kl_dict is less flexible to configure
-    # in runtime.
-    return [
-        generate_problem(
-            length=5,
-            num_axioms=5,
-            backward=True,
-            transform_gt=True,  # check this
-            degree=0,  # suspicious
-            num_order_or_combo=None,
-            orders=kl_dict,
-            train_test='train',
-        )
-        for _ in range(n_proofs)
-    ]
+# def generate_problems_from_kl_dict(n_proofs, kl_dict):
+#     # This function is deprecated, as kl_dict is less flexible to configure
+#     # in runtime.
+#     return [
+#         generate_problem(
+#             length=5,
+#             num_axioms=5,
+#             backward=True,
+#             transform_gt=True,  # check this
+#             degree=0,  # suspicious
+#             num_order_or_combo=None,
+#             orders=kl_dict,
+#             train_test='train',
+#         )
+#         for _ in range(n_proofs)
+#     ]
 
 
 @gin.configurable

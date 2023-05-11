@@ -2,10 +2,7 @@ import torch
 
 from transformers import MBartForConditionalGeneration
 
-# from supervised.int import InfixRepresentation
-# from supervised.int.gen_subgoal_data import generate_problems
-# from supervised.int.hf_data import GoalDataset
-# from supervised.int.representation import infix
+
 from supervised.int.hf_data import GoalDataset
 from supervised.rubik import hf_rubik_subgoal
 from supervised.rubik.gen_rubik_data import encode_distance

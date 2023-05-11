@@ -10,14 +10,14 @@ from metric_logging import log_image, log_scalar
 
 class JobCreateSamplesSokoban(Job):
     def __init__(self,
-                 goal_builder_class,
-                 n_tests,
-                 max_radius,
-                 total_confidence_level,
-                 internal_confidence_level,
-                 max_goals,
-                 only_correct=True
-                 ):
+                goal_builder_class,
+                n_tests,
+                max_radius,
+                total_confidence_level,
+                internal_confidence_level,
+                max_goals,
+                only_correct=True
+                ):
 
         self.goal_builder = goal_builder_class()
         self.n_tests = n_tests

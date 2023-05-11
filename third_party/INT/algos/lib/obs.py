@@ -14,7 +14,7 @@ cuda = torch.cuda.is_available()
 
 logic_function_names = [lf.name for lf in list(necessary_logic_functions.values())]
 numerical_function_names = [nf.name for nf in list(necessary_numerical_functions.values())]
-input_names = [chr(ord('a') + i) for i in range(25)] + [str(i) for i in range(10)]
+input_names = [chr(ord('a') + i) for i in range(25)] + [str(i) for i in range(0,11)]
 all_node_names = logic_function_names + numerical_function_names + input_names
 nodename2index = {
     node: torch.LongTensor([ind]).to(device)
@@ -159,7 +159,7 @@ def obs_to_graphs(obs, bag=False):
             graph_data = list(zip(range(len(node_op)),
                                   range(len(node_op))))
 
-        for _ in range(len(node_op)):
+        for _ in range(len(node_op)): # node_op就是有多少个entity, 也就是说这些entity都属于这个graph
             obj_gnn_ind.append(g_ind)
         g_ind += 1
         if cuda:

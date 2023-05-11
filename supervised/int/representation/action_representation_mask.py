@@ -3,14 +3,14 @@ from metric_logging import log_text
 from supervised.int.representation import base
 from supervised.int.representation.infix import VOCABULARY, split_formula_to_lexemes, OBJECTIVE_LEXEME, \
     CONDITION_LEXEME, DESTINATION_LEXEME, BOS_LEXEME, EOS_LEXEME
-from visualization import seq_parse
-from visualization.seq_parse import entity_to_seq_string
+from third_party.INT.visualization import seq_parse
+from third_party.INT.visualization.seq_parse import entity_to_seq_string
 
 PADDING_LEXEME = '_'
 MASK_SEPARATOR_LEXEME = ':'
 OUTPUT_START_LEXEME = '@'
 INPUT_END_LEXEME = '$'
-AXIOM_TOKENS = [char for char in 'ABCDEFGHIJKLMNOPQR']
+AXIOM_TOKENS = [char for char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZαβγδ']
 AXIOM_TO_CHAR = {axiom: char for axiom, char in zip(theorem_names, AXIOM_TOKENS)}
 CHAR_TO_AXIOM = {char: axiom for axiom, char in zip(theorem_names, AXIOM_TOKENS)}
 AXIOM_LENGTH = {"E": 1, "F": 1, "I": 1, "C": 1, "G": 1, "H": 1, "B": 1, "K": 1, "J": 1, "L": 3, "M": 2, "A": 1, "D": 1}
@@ -167,7 +167,6 @@ class ActionRepresentationMask(base.Representation):
 
     @classmethod
     def proof_states_to_policy_input_formula(cls, current_state, destination_state):
-
         formula = cls.proof_state_to_input_formula(current_state, False)
         destination_objectives = [seq_parse.logic_statement_to_seq_string(objective)
             for objective in destination_state['observation']['objectives']

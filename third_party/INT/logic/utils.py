@@ -1,5 +1,5 @@
 import itertools
-
+import random
 
 from logic.logic import *
 
@@ -39,11 +39,11 @@ standard_numerical_functions = {
 }
 
 real_sqr_non_neg = Theorem(name="real_sqr_non_neg", input_no=2, input_constraints=[(sqr, (0,), (1,))],
-                           assumptions=[(Real, (0,))], conclusions=[(NonNegative, (1,))])
+                            assumptions=[(Real, (0,))], conclusions=[(NonNegative, (1,))])
 amgm = Theorem(name="AMGM for 2 elements", input_no=4,
-               input_constraints=[(add, (0, 1), (2, )), (geometric_mean, (0, 1), (3, ))],
-               assumptions=[(NonNegative, (0, )), (NonNegative, (1, ))],
-               conclusions=[(BiggerOrEqual, (2, 3))])
+                input_constraints=[(add, (0, 1), (2, )), (geometric_mean, (0, 1), (3, ))],
+                assumptions=[(NonNegative, (0, )), (NonNegative, (1, ))],
+                conclusions=[(BiggerOrEqual, (2, 3))])
 
 standard_theorems = {
     "real_sqr_non_neg": real_sqr_non_neg,
@@ -56,7 +56,7 @@ class ReplayBuffer:
         self.buffer = list()
         self.name = name
         self.max_size = max_size
-        import random
+        
 
     def cache(self, other):
         self.buffer.extend(other)
