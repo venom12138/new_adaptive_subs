@@ -4,7 +4,7 @@ import gin
 import joblib
 
 from metric_logging import log_text
-
+import time
 
 def get_chunk_filename(file_number):
     return f'chunk_{file_number:08d}'
@@ -39,14 +39,13 @@ class LongListDumper:
 
 class LongListLoader:
     LOG_NAME = 'long_list_loader'
-
+    
     def __init__(self, dir_path):
         self._dir_path = dir_path
         assert os.path.isdir(self._dir_path)
 
         self._leftover_elts = []
         self._next_file_number = 0
-
         available_files = self.count_consecutive_files()
         log_text(
             self.LOG_NAME,
@@ -61,17 +60,19 @@ class LongListLoader:
         ):
             n_files += 1
         return n_files
-
+    
     def load(self, n_elts):
-        result = self._leftover_elts[:n_elts]
+        result = self._leftover_elts[:n_elts] # 上一次读取的剩余元素
         self._leftover_elts = self._leftover_elts[n_elts:]
 
         remaining_elts = n_elts - len(result)
         while remaining_elts > 0:
             path = os.path.join(
                 self._dir_path,
-                get_chunk_filename(self._next_file_number)
+                get_chunk_filename(self._next_file_number) # __class__
             )
+            # print(f"----------load from {path}-----------")
+            # time.sleep(5)
             if not os.path.exists(path):
                 break
             log_text(self.LOG_NAME, f'Loading file {path}')
@@ -84,3 +85,15 @@ class LongListLoader:
             self._next_file_number += 1
 
         return result
+    
+    # def next_file(self,):
+    #     print(self.__class__._next_file_number)
+    #     self.__class__._next_file_number += 1
+        
+if __name__ == '__main__':
+    inst1 = LongListLoader('/home/venom/projects/Automated_Theorem_Proving/new_adaptive_subs/data')
+    inst1.next_file()
+    inst1.next_file()
+    inst2 = LongListLoader('/home/venom/projects/Automated_Theorem_Proving/new_adaptive_subs/data')
+    inst2.next_file()
+    inst2.next_file()

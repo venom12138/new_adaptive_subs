@@ -9,6 +9,7 @@ import shutil
 import sys
 import time
 import warnings
+import wandb
 
 import gin
 import numpy as np
@@ -118,6 +119,7 @@ class HfTrainingPipeline(Job):
         self.eval_every_n_iterations = eval_every_n_iterations
         self.generate_every_n_iterations = generate_every_n_iterations
         self.n_training_samples = n_training_samples
+        # print(f"self.n_training_samples:{self.n_training_samples}")
         self.fresh_dataset_per_iteration = fresh_dataset_per_iteration
 
         self.batch_size = batch_size
@@ -205,7 +207,7 @@ class HfTrainingPipeline(Job):
 
         steps_per_epoch = math.ceil(self.n_training_samples / self.batch_size)
         steps_per_iteration = steps_per_epoch * self.epochs_per_iteration
-
+        # print(f"steps_per_epoch:{steps_per_epoch}")
         config_dict = make_config_dict(
             config_path=self.config_path,
             overrides_dict=self.model_config_overrides.dict
@@ -235,6 +237,9 @@ class HfTrainingPipeline(Job):
 
         t_iteration = time.time()
         datasets = self._generate_and_verify_datasets(done_epochs)
+        wandb.init(project=os.environ.get('WANDB_PROJECT', 'AutomatedTheoremProving'),
+                   group=os.environ.get('group_name', 'huggingface'),
+                   name=os.environ.get('run_name', self.output_dir),)
         for iteration in range(first_iteration, self.n_iterations):
             t_training = time.time()
 
@@ -259,7 +264,7 @@ class HfTrainingPipeline(Job):
                 # non-HF data generation relies on global random generators.
                 seed=self.init_hf_seed + iteration + 2,
 
-                save_steps=steps_per_iteration,  # I don't see any other way to save trainer state :(
+                save_steps=steps_per_iteration,  # I don't see any other way to save trainer state :
                 save_total_limit=1,
 
                 # Half precision may speed up training. There is also similar
@@ -272,7 +277,12 @@ class HfTrainingPipeline(Job):
                 overwrite_output_dir=True,
                 disable_tqdm=True,  # Disable progress bar.
                 predict_with_generate=False,
+                logging_strategy='epoch',
+                # logging_steps=steps_per_epoch,
+                report_to="wandb",  # enable logging to W&B                
             )
+            # print(f"training_arguments:{training_args}")
+            # dd
             assert training_args.train_batch_size == self.batch_size
 
             trainer = hf_utils.CustomizedSeq2SeqTrainer(

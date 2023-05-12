@@ -87,12 +87,15 @@ def generate_problems(
     assert max_length_mode != None
     problems = []
     if load_from_path:
+        # 通过这样的方式,使得这个对象成为了generate_problems的一个属性
+        # 以后每次都可以从这个对象中接着读取数据
         problem_loader = getattr(generate_problems, 'problem_loader', None)
         if problem_loader is None:
             generate_problems.problem_loader = problem_loader = \
                 storage.LongListLoader(load_from_path)
         # It may return less than n_proofs - when ran out of problems.
         problems.extend(problem_loader.load(n_proofs))
+        print('\n-----load from offline file-----\n')
 
     n_rem_proofs = n_proofs - len(problems)
     np.random.seed(seed)

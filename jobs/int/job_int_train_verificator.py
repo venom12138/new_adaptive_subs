@@ -92,7 +92,7 @@ class TrainHfForIntVerificator(hf_job.HfTrainingPipeline):
         # For loading dataset from a directory of chunks
         result = []
         for i in range(2):
-            dataset_path = np.random.choice(self.datasets[i])
+            dataset_path = np.random.choice(self.datasets[i]) # random choose a chunk file
             data = joblib.load(dataset_path)
             data = np.array(self.prepare_dataset(data, action_representation_pointer.VERIFICATOR_TOKENS[i]))
             idx = np.random.choice(len(data), size=n_data // 2)
@@ -103,7 +103,6 @@ class TrainHfForIntVerificator(hf_job.HfTrainingPipeline):
         np.random.shuffle(result)
 
         return result
-
 
     def _generate_datasets_for_iteration(self, done_epochs):
         train_dataset = hf_data.GoalDataset.from_formula_pairs(
