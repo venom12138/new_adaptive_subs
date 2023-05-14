@@ -51,6 +51,7 @@ class TrainHfForIntValue(hf_job.HfTrainingPipeline):
         formula_pairs = generate_value_data(
             n_proofs, self.n_samples_per_proof
         )
+        
         log_formula_statistics(
             formula_pairs, done_epochs, log_prefix,
             threshold=self.max_seq_length

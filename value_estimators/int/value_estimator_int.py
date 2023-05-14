@@ -12,9 +12,9 @@ from supervised.int.hf_data import GoalDataset
 from supervised.int.representation.infix_value import DISTANCE_TOKENS, PADDING_LEXEME
 from utils import hf
 from utils import hf_generate
-from visualization.seq_parse import logic_statement_to_seq_string
-
-
+from third_party.INT.visualization.seq_parse import logic_statement_to_seq_string
+from supervised.int.representation.infix import OBJECTIVE_LEXEME
+from supervised.int import InfixValueRepresentation
 class TrivialValueEstimatorINT:
     def evaluate(self, states):
         return [
@@ -40,6 +40,7 @@ class ValueEstimatorINT:
         self.model = None
         self.prediction_counter = 0
         self.calls_value = 0
+        self.representation = InfixValueRepresentation()
 
     def reset_counter(self):
         self.prediction_counter = 0
@@ -54,9 +55,7 @@ class ValueEstimatorINT:
 
     def evaluate(self, states):
         return self.predict_values([
-            logic_statement_to_seq_string(
-                int_utils.get_objective(state)
-            )
+            self.representation.proof_state_to_input_formula(state)
             for state in states
         ])
 
