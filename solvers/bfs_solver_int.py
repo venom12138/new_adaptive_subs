@@ -10,7 +10,7 @@ from solvers.core import Solver
 from utils.utils_sokoban import get_field_index_from_name, HashableNumpyArray
 from value_estimators.int.value_estimator_int import TrivialValueEstimatorINT
 from third_party.INT.visualization.seq_parse import logic_statement_to_seq_string
-
+from functools import reduce
 
 class SolverNode:
     def __init__(self, state, parent, depth, child_num, path, done):
@@ -21,7 +21,9 @@ class SolverNode:
         self.path = path
         self.done = done
         self.children = []
-        self.hash = set([logic_statement_to_seq_string(obj) for obj in state['observation']['objectives']])
+        objective_list = [logic_statement_to_seq_string(obj) for obj in state['observation']['objectives']]
+        hash_code = sum([hash(obj) for obj in objective_list])
+        self.hash = hash_code
 
     def add_child(self, child):
         self.children.append(child)
@@ -124,7 +126,8 @@ class BestFSSolverINT(GeneralSolver):
                 for child_num, goal_proposition in enumerate(goals):
                     current_goal_state = goal_proposition.subgoal_state
                     current_path = goal_proposition.actions
-                    current_goal_state_hash = set([logic_statement_to_seq_string(obj) for obj in current_goal_state['observation']['objectives']])
+                    current_goal_objective_list = [logic_statement_to_seq_string(obj) for obj in current_goal_state['observation']['objectives']]
+                    current_goal_state_hash = sum([hash(obj) for obj in current_goal_objective_list])
                     total_path_between_goals += len(current_path)
 
                     if current_goal_state_hash not in seen_hashed_states:

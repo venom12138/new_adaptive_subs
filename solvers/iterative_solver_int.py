@@ -22,7 +22,9 @@ class SolverNode:
         self.done = done
         self.verified = verified
         self.children = []
-        self.hash = set([logic_statement_to_seq_string(obj) for obj in state['observation']['objectives']])
+        objective_list = [logic_statement_to_seq_string(obj) for obj in state['observation']['objectives']]
+        hash_code = sum([hash(obj) for obj in objective_list])
+        self.hash = hash_code
 
     def add_child(self, child):
         self.children.append(child)
@@ -219,7 +221,8 @@ class BestFSIterativeSolverINT(GeneralSolver):
                 for child_num, goal_proposition in enumerate(goals):
                     current_goal_state = goal_proposition.subgoal_state
                     current_path = goal_proposition.actions
-                    current_goal_state_hash = set([logic_statement_to_seq_string(obj) for obj in current_goal_state['observation']['objectives']])
+                    current_goal_objective_list = [logic_statement_to_seq_string(obj) for obj in current_goal_state['observation']['objectives']]
+                    current_goal_state_hash = sum([hash(obj) for obj in current_goal_objective_list])
                     total_path_between_goals += len(current_path)
 
                     if current_goal_state_hash not in seen_hashed_states:
