@@ -233,7 +233,7 @@ class IntPolicyTokenizerPointer(transformers.PreTrainedTokenizer):
 
     def convert_tokens_to_string(self, tokens: List[str]) -> str:
         return ''.join(tokens)
-
+# 这个会考虑全部的objective所以不用管
 def generate_int_goal_dataset(
         n_proofs, tokenizer, max_seq_length,
         representation, kl_dict,
@@ -242,6 +242,7 @@ def generate_int_goal_dataset(
     formula_pairs = gen_subgoal_data.generate_formula_pairs(
         n_proofs, representation
     )
+    
     hf_utils.log_formula_statistics(
         formula_pairs, done_epochs, log_prefix,
         threshold=max_seq_length

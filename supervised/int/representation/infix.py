@@ -126,6 +126,7 @@ class InfixRepresentation(base.Representation):
             formula += CONDITION_LEXEME + CONDITION_LEXEME.join(conditions)
         if add_input_end_lexeme:
             formula += EOS_LEXEME
+        
         return formula
 
     @staticmethod

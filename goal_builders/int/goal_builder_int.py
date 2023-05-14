@@ -108,9 +108,12 @@ class GoalBuilderINT:
         real_cost = 0
 
         self.calls_generator += self.generator.num_beams
-        raw_subgoals = self.generator.generate_subgoals(current_state)
+        # 这里考虑了所有的objectives
+        raw_subgoals = self.generator.generate_subgoals(current_state) # 生成subgoal
         subgoal_strs = [raw_subgoal[0] for raw_subgoal in raw_subgoals]
+        # subgoal_strs: [[goal1,goal2, ..], [goal1,goal2,..], ...]
 
+        # gather data
         if self.gather_data_for_verificator:
             results = self.policy.reach_subgoals(current_state, subgoal_strs)
 
@@ -119,7 +122,7 @@ class GoalBuilderINT:
                     self.negative_subgoals.append(self.make_verificator_input(current_state, subgoal))
                 else:
                     self.positive_subgoals.append(self.make_verificator_input(current_state, subgoal))
-
+        
         if len(self.verificator_stats_thresholds) > 0:
             # Log verification statistics
             results = self.policy.reach_subgoals(current_state, subgoal_strs)
@@ -127,7 +130,7 @@ class GoalBuilderINT:
                 self.log_verification(current_state, subgoal, result is not None)
 
         subgoals_to_verify = []
-
+        # 利用verifier来消灭一部分
         for subgoal in subgoal_strs:
             verificator_prob = self.verificator_probability(current_state, subgoal)
 
@@ -142,7 +145,7 @@ class GoalBuilderINT:
             else:
                 # verificator is uncertain
                 subgoals_to_verify.append(subgoal)
-
+        # 利用policy来get_path
         results = self.policy.reach_subgoals(current_state, subgoals_to_verify)
         verified_subgoals = []
 

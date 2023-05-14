@@ -7,3 +7,5 @@
 /data/
 /configs/
 /assets/
+/data_for_verification/
+**/unused/

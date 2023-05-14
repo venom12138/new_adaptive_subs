@@ -232,8 +232,9 @@ def generate_formula_pairs(n_proofs, representation):
     print(f'INT problem generation took {time.time() - t}')
 
     state_pairs = extract_state_pairs(problems)
-
+    
     formula_pairs = stringify_state_data(state_pairs, representation)
+    
     log_text('Sample input formula', formula_pairs[0][0])
     log_text('Sample target formula', formula_pairs[0][1])
 

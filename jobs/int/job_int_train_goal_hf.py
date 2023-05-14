@@ -8,7 +8,7 @@ import supervised
 from supervised.int import hf_data
 from supervised.int.representation.infix import PADDING_LEXEME
 
-
+# 这个会考虑全部的objectives
 class TrainHfForIntGoal(hf_job.HfTrainingPipeline):
     def __init__(
         self,
@@ -58,6 +58,7 @@ class TrainHfForIntGoal(hf_job.HfTrainingPipeline):
         train_dataset = self._generate_dataset(
             self.n_proofs, done_epochs=done_epochs, log_prefix='train'
         )
+        
         log_scalar('time_train_dataset', done_epochs, time.time() - t_train_dataset)
 
         t_val_dataset = time.time()

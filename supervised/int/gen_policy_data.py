@@ -2,7 +2,7 @@ import random
 import time
 
 
-from supervised.int import InfixRepresentation, ActionRepresentationMask
+# from supervised.int import InfixRepresentation, ActionRepresentationMask
 from supervised.int.gen_subgoal_data import tokenize_stringified_data, encode_tokenized_data_to_seq2seq_arrays, \
     generate_problems
 # from supervised.int.generate_problem_with_final_statement import generate_problem_with_final_statement

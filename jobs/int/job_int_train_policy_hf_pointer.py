@@ -53,13 +53,16 @@ class TrainHfForIntPolicyPointer(hf_job.HfTrainingPipeline):
         self.n_val_proofs = n_val_proofs
         self.max_seq_length = self.max_length
 
-        self.representation = supervised.int.ActionRepresentationMask
+        # self.representation = supervised.int.ActionRepresentationMask
         self.max_steps_into_future = max_steps_into_future
-
+    # TODO: 这里在生成state_destination_action_data的时候，
+    # proof_states_to_policy_input_formula在find_diff的时候，
+    # 只find了与destination[0]之间的diff，故需要改
     def _generate_dataset(self, n_proofs, done_epochs, log_prefix):
         formula_pairs = generate_state_destination_action_data(
             n_proofs, self.max_steps_into_future, self.n_samples_per_proof
-        )
+        ) # 包括state_target_formula，也包括action_formula，但是action_formula是只与action相关的objective才会被encode进去
+        # 但其实这个无所谓，因为action_formula是作为target被使用的，所以也不影响训练
         log_formula_statistics(
             formula_pairs, done_epochs, log_prefix,
             threshold=self.max_seq_length

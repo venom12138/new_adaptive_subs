@@ -17,8 +17,8 @@ def count_objectives(proof_state):
 
 
 def get_objective(proof_state):
-    assert count_objectives(proof_state) == 1
-    return proof_state['observation']['objectives'][0]
+    # assert count_objectives(proof_state) == 1
+    return [obj for obj in proof_state['observation']['objectives'] ]
 
 
 def print_proof_state(init_state):

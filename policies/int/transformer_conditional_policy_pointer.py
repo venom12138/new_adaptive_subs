@@ -10,12 +10,12 @@ from policies.policy_utils import decode_prediction
 from supervised import ActionRepresentationPointer
 from supervised.int.hf_data import GoalDataset, IntPolicyTokenizerPointer
 from supervised.int.representation import infix
-from supervised.int.representation.action_representation_pointer import generate_masks_for_logic_statement
+from supervised.int.representation.action_representation_pointer import generate_masks_for_logic_statement, generate_masks_for_logic_statements
 from supervised.int import utils as int_utils
 from utils import hf
 from utils import hf_generate
-from visualization.seq_parse import logic_statement_to_seq_string
-
+from third_party.INT.visualization.seq_parse import logic_statement_to_seq_string
+from supervised.int.representation.infix import OBJECTIVE_LEXEME
 
 class SubgoalPursuitData:
     def __init__(
@@ -120,8 +120,8 @@ class ConditionalPolicyINT:
                     current_state=proof_state,
                     destination_state=subgoal_str
                 )
-            )
-            _, mask_to_entity = generate_masks_for_logic_statement(
+            ) # 此处即使是multi_objective也可胜任
+            _, mask_to_entity = generate_masks_for_logic_statements(
                 int_utils.get_objective(proof_state)
             )
             masks_to_entities.append(mask_to_entity)
@@ -144,9 +144,11 @@ class ConditionalPolicyINT:
 
     def reach_subgoals(self, proof_state, subgoal_strs, force_step_limit=None):
         results = [None] * len(subgoal_strs)
-        if int_utils.count_objectives(proof_state) > 1:
-            # Multi objectives are not supported.
-            return results
+        # TODO: support multiple objectives.
+        
+        # if int_utils.count_objectives(proof_state) > 1:
+        #     # Multi objectives are not supported.
+        #     return results
 
         pursuits = {
             idx: SubgoalPursuitData(
@@ -154,15 +156,15 @@ class ConditionalPolicyINT:
                 current_state=deepcopy(proof_state),
                 actions=[],
                 intermediate_states=[],
-                seen_states=set(logic_statement_to_seq_string(
-                    int_utils.get_objective(proof_state)
-                )),
+                seen_states=set([logic_statement_to_seq_string(obj) 
+                                for obj in int_utils.get_objective(proof_state)]),
                 is_finished=False,
                 subgoal_reached=False,
                 done=False,
             )
             for idx, subgoal_str in enumerate(subgoal_strs)
-        }
+        } # 每一个subgoal 一个persuit
+        # subgoal_str现在是obj#obj#obj的形式
 
         step_limit = self.max_steps if force_step_limit is None else force_step_limit
 
@@ -171,27 +173,29 @@ class ConditionalPolicyINT:
             states_subgoals = [
                 (pursuit.current_state, pursuit.subgoal_str)
                 for pursuit in pursuits.values()
-            ]
-            actions = self.predict_actions(states_subgoals)
+            ] # 每一个subgoal 一个persuit
+            actions = self.predict_actions(states_subgoals) # 批量的给每一个subgoal predict一个action
             assert len(actions) == len(pursuits)
 
             for pursuit, action in zip(pursuits.values(), actions):
                 if action is None:
-                    pursuit.is_finished = True
+                    pursuit.is_finished = True # 就是说搜不到呗
                     continue
 
                 self.env.load_problem_step(pursuit.current_state)
-                new_state, _, done, _ = self.env.step(action)
-                if int_utils.count_objectives(new_state) > 1:
+                new_state, _, done, _ = self.env.step(action) # 试试能不能更进一步
+                # if int_utils.count_objectives(new_state) > 1: # support multi objectives
+                #     pursuit.is_finished = True
+                #     continue
+                # new_state_str = logic_statement_to_seq_string(
+                #     int_utils.get_objective(new_state)
+                # )
+                new_state_set = set([logic_statement_to_seq_string(obj) 
+                                for obj in int_utils.get_objective(new_state)])
+                if new_state_set.issubset(pursuit.seen_states): # 没有产生新的state，维持原样，该subgoal无效
                     pursuit.is_finished = True
                     continue
-                new_state_str = logic_statement_to_seq_string(
-                    int_utils.get_objective(new_state)
-                )
-                if new_state_str in pursuit.seen_states:
-                    pursuit.is_finished = True
-                    continue
-                pursuit.seen_states.add(new_state_str)
+                pursuit.seen_states = pursuit.seen_states.union(new_state_set) # 产生了新的state，合并一下
 
                 pursuit.actions.append(action)
                 pursuit.current_state = deepcopy(new_state)
@@ -199,8 +203,9 @@ class ConditionalPolicyINT:
                 # Only keep track of the last 'done' value. We care only about
                 # reaching the subgoal. We don't break even if the proof is completed.
                 pursuit.done = done
-
-                if new_state_str == pursuit.subgoal_str:
+                # check if the subgoal is reached
+                subgoal_set = set(pursuit.subgoal_str.split(OBJECTIVE_LEXEME))
+                if new_state_set == subgoal_set:
                     pursuit.subgoal_reached = pursuit.is_finished = True
 
             next_round_pursuits = {}

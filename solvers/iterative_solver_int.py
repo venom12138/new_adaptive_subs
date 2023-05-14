@@ -22,7 +22,7 @@ class SolverNode:
         self.done = done
         self.verified = verified
         self.children = []
-        self.hash = logic_statement_to_seq_string(state['observation']['objectives'][0])
+        self.hash = set([logic_statement_to_seq_string(obj) for obj in state['observation']['objectives']])
 
     def add_child(self, child):
         self.children.append(child)
@@ -161,7 +161,7 @@ class BestFSIterativeSolverINT(GeneralSolver):
                 # print('zero_queue:', node_queues[0].queue)
                 # print('top values:', top_values)
                 print(f'id: {current_queue_id}, value: {top_values[current_queue_id]}')
-            elif self.use_adaptive_iterations == 'force-longest':
+            elif self.use_adaptive_iterations == 'force-longest': # 选择最高k的最高V
                 for i, queue in enumerate(node_queues):
                     if not queue.empty():
                         current_queue_id = i
@@ -183,10 +183,8 @@ class BestFSIterativeSolverINT(GeneralSolver):
 
             #pop node from queue to expand
             curr_val, _, current_node = node_queues[current_queue_id].get()
-            print(f'val = {curr_val} | {logic_statement_to_seq_string(current_node.state["observation"]["objectives"][0])}')
+            print(f'val = {curr_val} | {[logic_statement_to_seq_string(obj) for obj in current_node.state["observation"]["objectives"]]}')
             expanded_nodes += 1
-
-            # print(logic_statement_to_seq_string(current_node.state['observation']['objectives'][0]))
 
             if current_node.depth < self.max_tree_depth:
                 if isinstance(self.goal_builders[current_queue_id], list):
@@ -221,7 +219,7 @@ class BestFSIterativeSolverINT(GeneralSolver):
                 for child_num, goal_proposition in enumerate(goals):
                     current_goal_state = goal_proposition.subgoal_state
                     current_path = goal_proposition.actions
-                    current_goal_state_hash = logic_statement_to_seq_string(current_goal_state['observation']['objectives'][0])
+                    current_goal_state_hash = set([logic_statement_to_seq_string(obj) for obj in current_goal_state['observation']['objectives']])
                     total_path_between_goals += len(current_path)
 
                     if current_goal_state_hash not in seen_hashed_states:

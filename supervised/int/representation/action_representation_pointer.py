@@ -58,7 +58,10 @@ AXIOM_TOKENS = [char for char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZαβγδ']
 AXIOM_TO_CHAR = {axiom: char for axiom, char in zip(theorem_names, AXIOM_TOKENS)}
 CHAR_TO_AXIOM = {char: axiom for axiom, char in zip(theorem_names, AXIOM_TOKENS)}
 
-AXIOM_LENGTH = {'O': 2, 'D': 1, 'H': 1, 'A': 1, 'J': 1, 'L': 3, 'F': 1, 'I': 1, 'B': 1, 'K': 1, 'Q': 2, 'E': 1, 'C': 1, 'G': 1, 'N': 1, 'P': 2, 'R': 2, 'M': 2}
+# input_no
+AXIOM_LENGTH = {'O': 2, 'D': 1, 'H': 1, 'A': 1, 'J': 1, 'L': 3, 'F': 1, 'I': 1, 'B': 1, 'K': 1, 
+                'Q': 2, 'E': 1, 'C': 1, 'G': 1, 'N': 1, 'P': 2, 'R': 2, 'M': 2, 'S': 2, 'T': 2,
+                'U': 2, 'V': 2, 'W': 2, 'X': 2, 'Y': 2, 'Z': 2, 'α': 2, 'β': 2, 'γ': 2, 'δ': 2}
 
 POINTER_SYMBOLS = [
     '~',
@@ -133,6 +136,15 @@ def generate_masks_for_logic_statement(logic_statement, symbol='~'):
 
     return entity_to_mask, mask_to_entity
 
+def generate_masks_for_logic_statements(logic_statements, symbol='~'):
+    all_entity_to_mask = {}
+    all_mask_to_entity = {}
+    for logic_statement in logic_statements:
+        entity_to_mask, mask_to_entity = generate_masks_for_logic_statement(logic_statement, symbol)
+        all_entity_to_mask.update(entity_to_mask)
+        all_mask_to_entity.update(mask_to_entity)
+    
+    return all_entity_to_mask, all_mask_to_entity
 
 def parse_mask_for_entity(entity_with_mask, operands_with_mask_queue,  all_masks, symbol):
 
@@ -320,14 +332,15 @@ class ActionRepresentationPointer(base.Representation):
 
         return formula
 
-
     def proof_states_to_policy_input_formula(self, current_state, destination_state, vanilla=False):
         current_str, condition = self.proof_state_to_input_formula(current_state)
         destination_objective = OBJECTIVE_LEXEME
         if isinstance(destination_state, str):
-            destination_objective += destination_state
+            destination_objective += destination_state 
         else:
-            destination_objective += seq_parse.logic_statement_to_seq_string(destination_state['observation']['objectives'][0])
+            # TODO：这里有问题，应该把整个destination_state也给join起来
+            destination_objective += OBJECTIVE_LEXEME.join([seq_parse.logic_statement_to_seq_string(dest_obj) 
+                                                for dest_obj in destination_state['observation']['objectives']])
         if not self.vanilla and not vanilla:
             formula = self.find_diff(current_str, destination_objective)
         else:

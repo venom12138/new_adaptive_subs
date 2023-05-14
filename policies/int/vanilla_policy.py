@@ -10,7 +10,7 @@ from supervised.int.hf_data import GoalDataset, IntPolicyTokenizerPointer
 from supervised.int.representation import infix
 from supervised.int.representation.action_representation_pointer import generate_masks_for_logic_statement
 from utils import hf_generate, hf
-from visualization.seq_parse import entity_to_seq_string, logic_statement_to_seq_string
+from third_party.INT.visualization.seq_parse import entity_to_seq_string, logic_statement_to_seq_string
 
 
 class VanillaPolicyINT:

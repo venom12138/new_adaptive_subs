@@ -21,7 +21,7 @@ class SolverNode:
         self.path = path
         self.done = done
         self.children = []
-        self.hash = logic_statement_to_seq_string(state['observation']['objectives'][0])
+        self.hash = set([logic_statement_to_seq_string(obj) for obj in state['observation']['objectives']])
 
     def add_child(self, child):
         self.children.append(child)
@@ -35,11 +35,11 @@ class GeneralSolver(Solver):
 
 class BestFSSolverINT(GeneralSolver):
     def __init__(self,
-                 goal_builder_class=None,
-                 value_estimator_class=None,
-                 max_tree_size=None,
-                 max_tree_depth=None,
-                 ):
+                goal_builder_class=None,
+                value_estimator_class=None,
+                max_tree_size=None,
+                max_tree_depth=None,
+                ):
         super().__init__()
         self.max_tree_size = max_tree_size
         self.max_tree_depth = max_tree_depth
@@ -100,8 +100,6 @@ class BestFSSolverINT(GeneralSolver):
             print(f'val = {curr_val} | {logic_statement_to_seq_string(current_node.state["observation"]["objectives"][0])}')
             expanded_nodes += 1
 
-            # print(logic_statement_to_seq_string(current_node.state['observation']['objectives'][0]))
-
             if current_node.depth < self.max_tree_depth:
                 goals = self.goal_builder.build_goals(current_node.state)
                 # look for solution
@@ -126,7 +124,7 @@ class BestFSSolverINT(GeneralSolver):
                 for child_num, goal_proposition in enumerate(goals):
                     current_goal_state = goal_proposition.subgoal_state
                     current_path = goal_proposition.actions
-                    current_goal_state_hash = logic_statement_to_seq_string(current_goal_state['observation']['objectives'][0])
+                    current_goal_state_hash = set([logic_statement_to_seq_string(obj) for obj in current_goal_state['observation']['objectives']])
                     total_path_between_goals += len(current_path)
 
                     if current_goal_state_hash not in seen_hashed_states:

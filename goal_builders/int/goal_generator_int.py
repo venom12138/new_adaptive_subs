@@ -6,7 +6,7 @@ from supervised.int import InfixRepresentation, hf_data
 from supervised.int.representation import infix
 from utils import hf
 from utils import hf_generate
-
+from supervised.int.representation.infix import OBJECTIVE_LEXEME
 
 class GoalGeneratorINT:
     def __init__(
@@ -70,6 +70,9 @@ class GoalGeneratorINT:
             for sequence in encoded_sequences
         ]
         clean_sequences = list(map(self._clean_result, raw_sequences))
+        # split goals for multi goal setting
+        # splitted_clean_sequences = [goal.split(OBJECTIVE_LEXEME) for goal in clean_sequences]
+        # clean_sequences: [[goal1, goal2, ...], [goal1, goal2, ...], ...]
         probs = [None] * len(clean_sequences)
         if scores is not None:
             sequences_lengths = [
@@ -79,6 +82,7 @@ class GoalGeneratorINT:
             probs = hf_generate.compute_probabilities(
                 scores, sequences_lengths, length_penalty=self.length_penalty
             ).tolist()
+        # return list(zip(clean_sequences, probs))
         return list(zip(clean_sequences, probs))
 
     def _generate_sequence(self, inputs):
