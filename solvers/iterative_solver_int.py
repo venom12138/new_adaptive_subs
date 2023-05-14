@@ -9,7 +9,7 @@ from goal_builders.int.goal_builder_int import GoalBuilderINT
 from solvers.core import Solver
 from utils.utils_sokoban import get_field_index_from_name, HashableNumpyArray
 from value_estimators.int.value_estimator_int import TrivialValueEstimatorINT
-from visualization.seq_parse import logic_statement_to_seq_string
+from third_party.INT.visualization.seq_parse import logic_statement_to_seq_string
 
 
 class SolverNode:
@@ -204,7 +204,7 @@ class BestFSIterativeSolverINT(GeneralSolver):
                 for goal in goals:
                     if goal.done:
                         new_node = SolverNode(goal.subgoal_state, current_node, current_node.depth + 1, 0,
-                                   goal.actions, True, goal.verified)
+                                    goal.actions, True, goal.verified)
                         solution.append(new_node)
                         solved = True
                         tree_size += 1

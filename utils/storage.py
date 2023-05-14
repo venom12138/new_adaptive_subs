@@ -71,10 +71,11 @@ class LongListLoader:
                 self._dir_path,
                 get_chunk_filename(self._next_file_number) # __class__
             )
-            # print(f"----------load from {path}-----------")
+            
             # time.sleep(5)
             if not os.path.exists(path):
                 break
+            print(f"----------load from {path}-----------")
             log_text(self.LOG_NAME, f'Loading file {path}')
             cur_chunk = joblib.load(path)
 

@@ -40,6 +40,14 @@ import value_estimators
 
 import metric_logging
 
+def parse_gin_as_dict(gin_config):
+    config = {}
+    for key, value in gin_config.items():
+        global_prefix = key[1]
+        for sub_key, sub_value in value.items():
+            prefix = global_prefix + '.' + sub_key
+            config[prefix] = sub_value
+    return config
 
 def _parse_args():
     parser = argparse.ArgumentParser()
@@ -89,4 +97,11 @@ if __name__ == '__main__':
                         'NEPTUNE_API_TOKEN environment variable')
 
     gin.parse_config_files_and_bindings(args.config_file, gin_bindings)
+    
+    # gin_config = gin.config._CONFIG
+    # config = parse_gin_as_dict(gin_config)
+    # # print(config)
+    # for key,value in config.items():
+    #     print(key, value)
+    # dd
     run()

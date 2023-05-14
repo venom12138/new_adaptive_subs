@@ -42,7 +42,8 @@ class VanillaPolicyINT:
         ).to(self.device)
 
     def predict_action_str(self, state_formula):
-        dataset = GoalDataset.from_policy_input([state_formula], self.tokenizer, max_length=512)
+        dataset = GoalDataset.from_policy_input([state_formula], self.tokenizer, 
+                                                max_length=512)
         inputs = [
             hf_generate.GenerationInput(
                 input_ids=entry['input_ids'],

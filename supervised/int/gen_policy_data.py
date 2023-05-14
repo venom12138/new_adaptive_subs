@@ -23,9 +23,10 @@ def problem_to_policy_data_points(problem_with_final_statement,
             state_destination_indices.add(
                 (t_current, min(t_current + steps_into_future, len(problem_with_final_statement)-1))
             )
-
+    
     state_destination_action_data = []
     for state_idx, destination_idx in state_destination_indices:
+        # 这里设置为了vanillia=False之后，返回的就直接是cur_state，否则返回的就是find_diff之后的str，原来如此，妙极
         state_target_formula = action_representation.proof_states_to_policy_input_formula(
             current_state = problem_with_final_statement[state_idx],
             destination_state = problem_with_final_statement[destination_idx]
