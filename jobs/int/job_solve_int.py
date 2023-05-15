@@ -86,7 +86,7 @@ class JobSolveINT(Job):
                 boards_to_solve_in_batch = proofs_to_solve[jobs_done:jobs_done + jobs_in_batch]
 
                 results = Parallel(n_jobs=self.n_parallel_workers, verbose=100)(
-                    delayed(solve_problem)(solver, input_problem[0], devices[i%2]) for i, input_problem in enumerate(boards_to_solve_in_batch)
+                    delayed(solve_problem)(solver, input_problem[0],) for input_problem in boards_to_solve_in_batch
                 )
                 batch_positive_goals, batch_negative_goals = self.save_data_for_verificator(results)
                 positive_goals.extend(batch_positive_goals)
