@@ -117,7 +117,7 @@ class VanillaPolicyINT:
                 print(
                     f'Step = {steps_taken} \n curr = {logic_statement_to_seq_string(current_proof_state["observation"]["objectives"][0])}')
             actions, debugg_info = self.predict_actions(current_proof_state)
-            # debugg_info['num_steps'] = len(seen_states)
+            debugg_info['num_steps'] = cnt
             if len(actions) > 0:
                 action = actions[0][0]
                 path.append(action)
@@ -125,7 +125,7 @@ class VanillaPolicyINT:
                     reaching_goal_debug_info['None action'] = True
                     if debugg_mode:
                         print('None action')
-                    return False
+                    return False, debugg_info
                 else:
                     if debugg_mode:
                         print(f'{action[0]} | {[entity_to_seq_string(x) for x in action[1:]]}')
@@ -145,7 +145,6 @@ class VanillaPolicyINT:
                     cnt += 1
                     current_proof_state = deepcopy(new_obs)
                     if done:
-                        debugg_info['num_steps'] = cnt
                         return True, debugg_info
                 steps_taken += 1
             else:
