@@ -18,11 +18,12 @@ class TrainHfForIntGoal(hf_job.HfTrainingPipeline):
         per_epoch_eval_dataset_ratio=0.2,
         output_dir='out/goal',
         config_path='assets/hf_configs/mbart_config_goal.json',
+        max_length=512,
         **kwargs
     ):
         super().__init__(
             tokenizer=hf_data.IntGoalTokenizer(
-                model_max_length=512,
+                model_max_length=max_length,
                 padding_side='right',
                 pad_token=PADDING_LEXEME,
             ),
@@ -34,7 +35,7 @@ class TrainHfForIntGoal(hf_job.HfTrainingPipeline):
         self.n_proofs = n_proofs
         self.n_val_proofs = n_val_proofs
         self.per_epoch_eval_dataset_ratio = per_epoch_eval_dataset_ratio
-        self.max_seq_length = 512
+        self.max_seq_length = max_length
 
         # There are some hacks hardcoded in InfixRepresentation,
         # but in PrefixRepresentation not.
