@@ -150,4 +150,4 @@ class VanillaPolicyINT:
             else:
                 steps_taken += 1
                 break
-        return False, {'limit': True, 'num_steps': len(seen_states)}
+        return False, {'limit': True, 'num_steps': cnt}
