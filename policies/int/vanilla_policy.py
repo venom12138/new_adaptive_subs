@@ -110,13 +110,14 @@ class VanillaPolicyINT:
         subgoal_reached = False
         steps_taken = 0
         current_proof_state = deepcopy(proof_state)
-        seen_states = {logic_statement_to_seq_string(proof_state['observation']['objectives'][0])}
-        while not subgoal_reached and len(seen_states) < self.max_steps_allowed:
+        # seen_states = {logic_statement_to_seq_string(proof_state['observation']['objectives'][0])}
+        cnt = 0
+        while not subgoal_reached and cnt < self.max_steps_allowed: # len(seen_states) < self.max_steps_allowed:
             if debugg_mode:
                 print(
                     f'Step = {steps_taken} \n curr = {logic_statement_to_seq_string(current_proof_state["observation"]["objectives"][0])}')
             actions, debugg_info = self.predict_actions(current_proof_state)
-            debugg_info['num_steps'] = len(seen_states)
+            # debugg_info['num_steps'] = len(seen_states)
             if len(actions) > 0:
                 action = actions[0][0]
                 path.append(action)
@@ -135,12 +136,13 @@ class VanillaPolicyINT:
                         return False, debugg_info
 
                     new_obs_str = logic_statement_to_seq_string(new_obs['observation']['objectives'][-1])
-                    if new_obs_str in seen_states and not done:
-                        print('Seen state')
-                        debugg_info['seen_state'] = True
-                        return False, debugg_info
+                    # if new_obs_str in seen_states and not done:
+                    #     print('Seen state')
+                    #     debugg_info['seen_state'] = True
+                    #     return False, debugg_info
 
-                    seen_states.add(new_obs_str)
+                    # seen_states.add(new_obs_str)
+                    cnt += 1
                     current_proof_state = deepcopy(new_obs)
                     if done:
                         return True, debugg_info
