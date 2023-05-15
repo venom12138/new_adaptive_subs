@@ -77,9 +77,16 @@ class JobSolveINT(Job):
         negative_goals = []
         positive_chunk_num = 0
         negative_chunk_num = 0
-        for i in  range(self.n_jobs // batch_jobs):
+        if self.n_jobs % batch_jobs != 0:
+            epochs = self.n_jobs // batch_jobs + 1
+        else:
+            epochs = self.n_jobs // batch_jobs
+        for i in range(epochs):
             total_time_start = time.time()
-            jobs_to_do = batch_jobs
+            if i == epochs - 1 and self.n_jobs % batch_jobs != 0:
+                jobs_to_do = self.n_jobs - i * batch_jobs
+            else:
+                jobs_to_do = min(batch_jobs, self.n_jobs)
             jobs_done = 0
             batch_num = 0
             proofs_to_solve = generate_problems(batch_jobs)
