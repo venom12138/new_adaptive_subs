@@ -91,7 +91,12 @@ class IntGoalTokenizer(transformers.PreTrainedTokenizer):
         return int_repr.split_formula_to_lexemes(text)
 
     def _convert_token_to_id(self, token):
-        return int_repr.STR_TO_TOKEN[token]
+        if token in int_repr.STR_TO_TOKEN:
+            return int_repr.STR_TO_TOKEN[token]
+        else:
+            return int_repr.STR_TO_TOKEN[int_repr.PADDING_LEXEME]
+
+        # return int_repr.STR_TO_TOKEN[token]
 
     def _convert_id_to_token(self, index: int) -> str:
         return int_repr.TOKEN_TO_STR[index]
@@ -122,7 +127,11 @@ class IntPolicyTokenizer(transformers.PreTrainedTokenizer):
         return act_rep.split_formula_to_lexemes(text)
 
     def _convert_token_to_id(self, token):
-        return act_rep.STR_TO_TOKEN[token]
+        if token in act_rep.STR_TO_TOKEN:
+            return act_rep.STR_TO_TOKEN[token]
+        else:
+            return act_rep.STR_TO_TOKEN[act_rep.PADDING_LEXEME]
+        # return act_rep.STR_TO_TOKEN[token]
 
     def _convert_id_to_token(self, index: int) -> str:
         return act_rep.TOKEN_TO_STR[index]
@@ -152,7 +161,11 @@ class IntPolicyTokenizerMask(transformers.PreTrainedTokenizer):
         return act_rep_mask.split_formula_to_lexemes(text)
 
     def _convert_token_to_id(self, token):
-        return act_rep_mask.STR_TO_TOKEN[token]
+        if token in act_rep_mask.STR_TO_TOKEN:
+            return act_rep_mask.STR_TO_TOKEN[token]
+        else:
+            return act_rep_mask.STR_TO_TOKEN[act_rep_mask.PADDING_LEXEME]
+        # return act_rep_mask.STR_TO_TOKEN[token]
 
     def _convert_id_to_token(self, index: int) -> str:
         return act_rep_mask.TOKEN_TO_STR[index]
@@ -182,7 +195,11 @@ class IntValueTokenizer(transformers.PreTrainedTokenizer):
         return infix_value_rep.split_formula_to_lexemes(text)
 
     def _convert_token_to_id(self, token):
-        return infix_value_rep.STR_TO_TOKEN[token]
+        if token in infix_value_rep.STR_TO_TOKEN:
+            return infix_value_rep.STR_TO_TOKEN[token]
+        else:
+            return infix_value_rep.STR_TO_TOKEN[infix_value_rep.PADDING_LEXEME]
+        # return infix_value_rep.STR_TO_TOKEN[token]
 
     def _convert_id_to_token(self, index: int) -> str:
         return infix_value_rep.TOKEN_TO_STR[index]
@@ -212,10 +229,13 @@ class IntPolicyTokenizerPointer(transformers.PreTrainedTokenizer):
         return act_rep_pointer.split_formula_to_lexemes(text)
 
     def _convert_token_to_id(self, token):
-        assert token in act_rep_pointer.STR_TO_TOKEN, (
-            f"Token '{token}' is out of vocabulary."
-        )
-        return act_rep_pointer.STR_TO_TOKEN[token]
+        # assert token in act_rep_pointer.STR_TO_TOKEN, (
+        #     f"Token '{token}' is out of vocabulary."
+        # )
+        if token in act_rep_pointer.STR_TO_TOKEN:
+            return act_rep_pointer.STR_TO_TOKEN[token]
+        else:
+            return act_rep_pointer.STR_TO_TOKEN[act_rep_pointer.PADDING_LEXEME]
 
     def _convert_id_to_token(self, index: int) -> str:
         return act_rep_pointer.TOKEN_TO_STR[index]

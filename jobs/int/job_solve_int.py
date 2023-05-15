@@ -11,6 +11,8 @@ from supervised.int.gen_subgoal_data import generate_problems
 from third_party.INT.visualization.seq_parse import logic_statement_to_seq_string, entity_to_seq_string
 import torch
 import joblib
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 def solve_problem(solver, input_state, device=None):
     time_s = time.time()

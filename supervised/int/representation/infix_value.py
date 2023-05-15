@@ -22,8 +22,8 @@ MULTI_CHAR_LEXEMES = [
     'sqrt',
     r'\leq ',
     r'\geq ',
-    r'\gt',
-    r'\lt',
+    r'\gt ',
+    r'\lt ',
     # We haven't use inequalities in INT yet, so not sure if '\leq' and '\geq'
     # work properly.
 ]

@@ -84,7 +84,7 @@ def logic_statement_name_to_seq_string(logic_statement_name):
         logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
         two_operands = extract_two_operands(logic_statement_name)
         two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
-        return r"\gt".join(two_operands_latex)
+        return r"\gt ".join(two_operands_latex)
     elif logic_statement_name.startswith("SmallerOrEqual"):
         logic_function_name = "SmallerOrEqual"
         logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
@@ -96,7 +96,7 @@ def logic_statement_name_to_seq_string(logic_statement_name):
         logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
         two_operands = extract_two_operands(logic_statement_name)
         two_operands_latex = [entity_name_to_seq_string(operand) for operand in two_operands]
-        return r"\lt".join(two_operands_latex)
+        return r"\lt ".join(two_operands_latex)
     elif logic_statement_name.startswith("Equivalent"):
         logic_function_name = "Equivalent"
         logic_statement_name = rm_function_and_brackets(logic_statement_name, logic_function_name)
