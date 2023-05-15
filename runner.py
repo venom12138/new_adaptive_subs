@@ -52,15 +52,11 @@ def parse_gin_as_dict(gin_config):
 def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--config_file', action='append', default=["configs/int/solve/bfs/adasubs.gin"],
+        '--config_file', action='append', default=[],
         help='Gin config files.'
     )
     parser.add_argument(
-        '--config', action='append', default=["GoalGeneratorINT.n_subgoals=3",\
-            "BestFSIterativeSolverINT.goal_builders_list=[{'path': './resources/int/goal_generators/dist_4', 'steps': 4}, {'path': './resources/int/goal_generators/dist_3', 'steps': 3}, {'path': './resources/int/goal_generators/dist_2', 'steps': 2}, {'path': './resources/int/goal_generators/dist_1', 'steps': 1}]", \
-            "ConditionalPolicyINT.checkpoint_path='./resources/int/conditional_policy'", \
-            "ValueEstimatorINT.checkpoint_path='./resources/int/value'", \
-            "generate_problems.load_from_path = './data'"],
+        '--config', action='append', default=[],
         help='Gin config overrides.'
     )
     parser.add_argument(

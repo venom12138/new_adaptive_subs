@@ -45,4 +45,5 @@ def generate_offline_problems(save_path, start_chunk=0, n_proofs=1e6, n_workers=
         joblib.dump(problems, filename=f'{save_path}/chunk_{cur_chunk:08d}')
 
 if __name__ == '__main__':
-    generate_offline_problems(save_path='./data', start_chunk=311, n_proofs=1000000, n_workers=60, num_proof_per_chunk=1000,)
+    generate_offline_problems(save_path='./data', start_chunk=123, n_proofs=1000000, n_workers=60, 
+                              num_proof_per_chunk=1000, seed=4521763)

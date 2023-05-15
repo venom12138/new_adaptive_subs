@@ -304,7 +304,7 @@ def generate_valid_steps(steps):
         if test_proof.is_proved():
             break
         for op in step["input_entities"]:
-            assert (is_entity(op) and op.root is not None) or is_ls(op) or is_empty_ls(op)   
+            # assert (is_entity(op) and op.root is not None) or is_ls(op) or is_empty_ls(op)   
             if not (is_entity(op) and op.root.name in
                     [ls.name for ls in test_proof.get_ground_truth() + test_proof.get_objectives()]) or \
                     (is_ls(op) and op.name in

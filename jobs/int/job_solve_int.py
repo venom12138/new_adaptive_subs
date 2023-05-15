@@ -9,11 +9,11 @@ from metric_logging import log_scalar, log_scalar_metrics, MetricsAccumulator, l
 from supervised.int.gen_subgoal_data import generate_problems
 
 from third_party.INT.visualization.seq_parse import logic_statement_to_seq_string, entity_to_seq_string
+import torch
 
-
-def solve_problem(solver, input_state):
+def solve_problem(solver, input_state, device=None):
     time_s = time.time()
-    solver.construct_networks()
+    solver.construct_networks(device)
     solution, tree_metrics, root, trajectory_actions, additional_info = solver.solve(input_state)
     time_solving = time.time() - time_s
     return dict(
@@ -63,34 +63,33 @@ class JobSolveINT(Job):
             self.collection = {}
 
     def execute(self):
-        proofs_to_solve = generate_problems(self.n_jobs)
-
         solver = self.solver_class()
         # solver.construct_networks()
+        batch_jobs = 1000
+        devices = torch.cuda.device_count()
+        devices = [torch.device(f'cuda:{i}') for i in range(devices)]
+        for i in  range(self.n_jobs // batch_jobs):
+            total_time_start = time.time()
+            jobs_to_do = batch_jobs
+            jobs_done = 0
+            batch_num = 0
+            proofs_to_solve = generate_problems(batch_jobs)
+            while jobs_to_do > 0:
+                jobs_in_batch = min(jobs_to_do, self.batch_size)
+                boards_to_solve_in_batch = proofs_to_solve[jobs_done:jobs_done + jobs_in_batch]
 
-        total_time_start = time.time()
+                results = Parallel(n_jobs=self.n_parallel_workers, verbose=100)(
+                    delayed(solve_problem)(solver, input_problem[0], devices[i%len(devices)]) for i, input_problem in enumerate(boards_to_solve_in_batch)
+                )
+                self.log_results(results, jobs_done)
+                jobs_done += jobs_in_batch
+                jobs_to_do -= jobs_in_batch
+                batch_num += 1
 
-        jobs_done = 0
-        jobs_to_do = self.n_jobs
-        batch_num = 0
-
-        while jobs_to_do > 0:
-            jobs_in_batch = min(jobs_to_do, self.batch_size)
-            boards_to_solve_in_batch = proofs_to_solve[jobs_done:jobs_done + jobs_in_batch]
-
-            results = Parallel(n_jobs=self.n_parallel_workers, verbose=100)(
-                delayed(solve_problem)(solver, input_problem[0]) for input_problem in boards_to_solve_in_batch
-            )
-
-            self.log_results(results, jobs_done)
-
-            jobs_done += jobs_in_batch
-            jobs_to_do -= jobs_in_batch
-            batch_num += 1
-
-        for metric, value in self.solved_stats.return_scalars().items():
-            log_text('summary', f'{metric},  {value}')
-        log_text('summary', f'Finished time , {time.time() - total_time_start}')
+            for metric, value in self.solved_stats.return_scalars().items():
+                log_text('summary', f'{metric},  {value}')
+            log_text('summary', f'Finished time {i}, {time.time() - total_time_start}')
+            print(f'Finished time {i}, {time.time() - total_time_start}')
 
     def log_results(self, results, step):
         n_logs = len(results)

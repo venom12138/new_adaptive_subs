@@ -46,7 +46,8 @@ class BestFSIterativeSolverINT(GeneralSolver):
                  max_tree_depth=None,
                  goal_builders_list=None,
                  iterations_list=None,
-                 use_adaptive_iterations=None
+                 use_adaptive_iterations=None,
+                 device=None,
                  ):
         super().__init__()
         self.max_tree_size = max_tree_size
@@ -71,7 +72,7 @@ class BestFSIterativeSolverINT(GeneralSolver):
             if isinstance(builder_id, list):
                 return [create_goal_builders(internal_builder_id) for internal_builder_id in builder_id]
             else:
-                builder = goal_builder_class(model_id=builder_id['path'], max_policy_steps=builder_id['steps'])
+                builder = goal_builder_class(model_id=builder_id['path'], max_policy_steps=builder_id['steps'],)
                 if self.policy is None:
                     self.policy = builder.policy
                 return builder
@@ -81,7 +82,8 @@ class BestFSIterativeSolverINT(GeneralSolver):
 
         print(goal_builders_list, self.goal_builders)
 
-    def construct_networks(self):
+    def construct_networks(self, device=None):
+        self.value_estimator.device = device
         self.value_estimator.construct_networks()
 
         def construct_goal_builders(builder):
@@ -89,6 +91,7 @@ class BestFSIterativeSolverINT(GeneralSolver):
                 for internal_builder in builder:
                     construct_goal_builders(internal_builder)
             else:
+                builder.device = device
                 builder.construct_networks()
 
         construct_goal_builders(self.goal_builders)

@@ -26,21 +26,22 @@ class GoalBuilderINT:
                  verificator_class=None,
                  verificator_thresholds=[0, 1],  # [negative, positive]
                  verificator_stats_thresholds=[],
-                 max_policy_steps=None
+                 max_policy_steps=None,
+                 device=None
                  ):
         self.model_id = model_id
         if model_id is None:
-            self.generator = generator_class()
+            self.generator = generator_class(device=device)
         else:
-            self.generator = generator_class(generator_checkpoint_path=model_id)
+            self.generator = generator_class(generator_checkpoint_path=model_id, device=device)
 
         self.max_policy_steps = max_policy_steps
-        self.policy = policy_class(max_steps=max_policy_steps)
+        self.policy = policy_class(max_steps=max_policy_steps, device=device)
 
         if verificator_class is None:
             self.verificator = None
         else:
-            self.verificator = verificator_class()
+            self.verificator = verificator_class(device=device)
 
         self.gather_data_for_verificator = gather_data_for_verificator
         self.positive_subgoals = []
