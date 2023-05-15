@@ -19,16 +19,16 @@ SubgoalVerifiedPath = collections.namedtuple('SubgoalVerifiedPath', [
 
 class GoalBuilderINT:
     def __init__(self,
-                 generator_class=None,
-                 policy_class=None,
-                 model_id=None,
-                 gather_data_for_verificator=False,
-                 verificator_class=None,
-                 verificator_thresholds=[0, 1],  # [negative, positive]
-                 verificator_stats_thresholds=[],
-                 max_policy_steps=None,
-                 device=None
-                 ):
+                generator_class=None,
+                policy_class=None,
+                model_id=None,
+                gather_data_for_verificator=False,
+                verificator_class=None,
+                verificator_thresholds=[0, 1],  # [negative, positive]
+                verificator_stats_thresholds=[],
+                max_policy_steps=None,
+                device=None
+                ):
         self.model_id = model_id
         if model_id is None:
             self.generator = generator_class(device=device)

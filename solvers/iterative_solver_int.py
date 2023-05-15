@@ -241,15 +241,25 @@ class BestFSIterativeSolverINT(GeneralSolver):
                             queue.put((-node_val, random.random(), new_node))
                         tree_size += 1
 
-        def save_verificator_data(builder):
-            if isinstance(builder, list):
-                for internal_builder in builder:
-                    save_verificator_data(internal_builder)
-            else:
-                builder.save_verificator_data()
+        # def save_verificator_data(builder):
+        #     if isinstance(builder, list):
+        #         for internal_builder in builder:
+        #             save_verificator_data(internal_builder)
+        #     else:
+        #         builder.save_verificator_data()
 
-        save_verificator_data(self.goal_builders)
-
+        # save_verificator_data(self.goal_builders)
+        positive_goals = []
+        negative_goals = []
+        if isinstance(builder, list):
+            for builder in self.goal_builders:
+                if builder.gather_data_for_verificator:
+                    positive_goals.extend(builder.positive_goals)
+                    negative_goals.extend(builder.negative_goals)
+        if len(positive_goals) > 100:
+            positive_goals = positive_goals[:100]
+        elif len(negative_goals) > 100:
+            negative_goals = negative_goals[:100]
         tree_metrics = {
             'nodes': tree_size,
             'expanded_nodes': expanded_nodes,
@@ -301,7 +311,7 @@ class BestFSIterativeSolverINT(GeneralSolver):
                 trajectory_actions = list(inter_goal.path) + trajectory_actions
 
             inter_goals = [node for node in reversed(solution)]
-            return (inter_goals, tree_metrics, root, trajectory_actions, additional_info)
+            return (inter_goals, tree_metrics, root, trajectory_actions, additional_info, [positive_goals, negative_goals])
         else:
-            return (None, tree_metrics, root, None, additional_info)
+            return (None, tree_metrics, root, None, additional_info, [positive_goals, negative_goals])
 

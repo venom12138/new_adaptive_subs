@@ -10,11 +10,12 @@ from supervised.int.gen_subgoal_data import generate_problems
 
 from third_party.INT.visualization.seq_parse import logic_statement_to_seq_string, entity_to_seq_string
 import torch
+import joblib
 
 def solve_problem(solver, input_state, device=None):
     time_s = time.time()
     solver.construct_networks(device)
-    solution, tree_metrics, root, trajectory_actions, additional_info = solver.solve(input_state)
+    solution, tree_metrics, root, trajectory_actions, additional_info, goals_for_verification = solver.solve(input_state)
     time_solving = time.time() - time_s
     return dict(
         solution=solution,
@@ -23,7 +24,8 @@ def solve_problem(solver, input_state, device=None):
         trajectory_actions=trajectory_actions,
         time_solving=time_solving,
         input_problem=deepcopy(input_state),
-        additional_info=additional_info
+        additional_info=additional_info,
+        goals_for_verification=goals_for_verification
     )
 
 
@@ -66,8 +68,13 @@ class JobSolveINT(Job):
         solver = self.solver_class()
         # solver.construct_networks()
         batch_jobs = 1000
+        batch_goals = 1000
         devices = torch.cuda.device_count()
         devices = [torch.device(f'cuda:{i}') for i in range(devices)]
+        positive_goals = []
+        negative_goals = []
+        positive_chunk_num = 0
+        negative_chunk_num = 0
         for i in  range(self.n_jobs // batch_jobs):
             total_time_start = time.time()
             jobs_to_do = batch_jobs
@@ -79,8 +86,20 @@ class JobSolveINT(Job):
                 boards_to_solve_in_batch = proofs_to_solve[jobs_done:jobs_done + jobs_in_batch]
 
                 results = Parallel(n_jobs=self.n_parallel_workers, verbose=100)(
-                    delayed(solve_problem)(solver, input_problem[0], devices[i%len(devices)]) for i, input_problem in enumerate(boards_to_solve_in_batch)
+                    delayed(solve_problem)(solver, input_problem[0], ) for input_problem in boards_to_solve_in_batch
                 )
+                batch_positive_goals, batch_negative_goals = self.save_data_for_verificator(results)
+                positive_goals.extend(batch_positive_goals)
+                negative_goals.extend(batch_negative_goals)
+                while len(positive_goals) > batch_goals:
+                    joblib.dump(positive_goals, f'output_verificator/positive_chunk_{positive_chunk_num:08d}')
+                    positive_chunk_num += 1
+                    positive_goals = positive_goals[batch_goals:]
+                while len(negative_goals) > batch_goals:
+                    joblib.dump(negative_goals, f'output_verificator/negative_chunk_{negative_chunk_num:08d}')
+                    negative_chunk_num += 1
+                    negative_goals = negative_goals[batch_goals:]
+                
                 self.log_results(results, jobs_done)
                 jobs_done += jobs_in_batch
                 jobs_to_do -= jobs_in_batch
@@ -90,7 +109,17 @@ class JobSolveINT(Job):
                 log_text('summary', f'{metric},  {value}')
             log_text('summary', f'Finished time {i}, {time.time() - total_time_start}')
             print(f'Finished time {i}, {time.time() - total_time_start}')
-
+    
+    def save_data_for_verificator(self, results):
+        n_logs = len(results)
+        positive_goals = []
+        negative_goals = []
+        for log_num, result in enumerate(results):
+            batch_positive_goals, batch_negative_goals = result.pop('goals_for_verification')
+            positive_goals.extend(batch_positive_goals)
+            negative_goals.extend(batch_negative_goals)
+        return positive_goals, negative_goals
+    
     def log_results(self, results, step):
         n_logs = len(results)
         for log_num, result in enumerate(results):
