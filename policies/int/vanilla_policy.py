@@ -130,10 +130,10 @@ class VanillaPolicyINT:
                     if debugg_mode:
                         print(f'{action[0]} | {[entity_to_seq_string(x) for x in action[1:]]}')
                     new_obs, _, done, _ = self.env.step(action)
-                    if len(new_obs['observation']['objectives']) > 1:
-                        debugg_info['more_obj'] = True
-                        print('more obj')
-                        return False, debugg_info
+                    # if len(new_obs['observation']['objectives']) > 1:
+                    #     debugg_info['more_obj'] = True
+                    #     print('more obj')
+                    #     return False, debugg_info
 
                     new_obs_str = logic_statement_to_seq_string(new_obs['observation']['objectives'][-1])
                     # if new_obs_str in seen_states and not done:
@@ -145,6 +145,7 @@ class VanillaPolicyINT:
                     cnt += 1
                     current_proof_state = deepcopy(new_obs)
                     if done:
+                        debugg_info['num_steps'] = cnt
                         return True, debugg_info
                 steps_taken += 1
             else:
