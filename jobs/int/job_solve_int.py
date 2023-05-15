@@ -101,7 +101,7 @@ class JobSolveINT(Job):
                     joblib.dump(negative_goals, f'output_verificator/negative_chunk_{negative_chunk_num:08d}')
                     negative_chunk_num += 1
                     negative_goals = negative_goals[batch_goals:]
-                
+                print(f"positive_goals:{len(positive_goals)}, negative_goals:{len(negative_goals)}")
                 self.log_results(results, jobs_done)
                 jobs_done += jobs_in_batch
                 jobs_to_do -= jobs_in_batch

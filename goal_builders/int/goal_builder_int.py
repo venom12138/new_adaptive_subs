@@ -115,20 +115,19 @@ class GoalBuilderINT:
         # subgoal_strs: [[goal1,goal2, ..], [goal1,goal2,..], ...]
 
         # gather data
-        if self.gather_data_for_verificator:
+        if self.gather_data_for_verificator or len(self.verificator_stats_thresholds) > 0:
             results = self.policy.reach_subgoals(current_state, subgoal_strs)
+            if self.gather_data_for_verificator:
+                for subgoal, result in zip(subgoal_strs, results):
+                    if result is None:
+                        self.negative_subgoals.append(self.make_verificator_input(current_state, subgoal))
+                    else:
+                        self.positive_subgoals.append(self.make_verificator_input(current_state, subgoal))
 
-            for subgoal, result in zip(subgoal_strs, results):
-                if result is None:
-                    self.negative_subgoals.append(self.make_verificator_input(current_state, subgoal))
-                else:
-                    self.positive_subgoals.append(self.make_verificator_input(current_state, subgoal))
-        
-        if len(self.verificator_stats_thresholds) > 0:
-            # Log verification statistics
-            results = self.policy.reach_subgoals(current_state, subgoal_strs)
-            for subgoal, result in zip(subgoal_strs, results):
-                self.log_verification(current_state, subgoal, result is not None)
+            if len(self.verificator_stats_thresholds) > 0:
+                # Log verification statistics
+                for subgoal, result in zip(subgoal_strs, results):
+                    self.log_verification(current_state, subgoal, result is not None)
 
         subgoals_to_verify = []
         # 利用verifier来消灭一部分

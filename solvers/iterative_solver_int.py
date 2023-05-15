@@ -251,11 +251,14 @@ class BestFSIterativeSolverINT(GeneralSolver):
         # save_verificator_data(self.goal_builders)
         positive_goals = []
         negative_goals = []
-        if isinstance(builder, list):
+        if isinstance(self.goal_builders, list):
             for builder in self.goal_builders:
                 if builder.gather_data_for_verificator:
-                    positive_goals.extend(builder.positive_goals)
-                    negative_goals.extend(builder.negative_goals)
+                    positive_goals.extend(builder.positive_subgoals)
+                    negative_goals.extend(builder.negative_subgoals)
+        else:
+            positive_goals.extend(self.goal_builders.positive_subgoals)
+            negative_goals.extend(self.goal_builders.negative_subgoals)
         if len(positive_goals) > 100:
             positive_goals = positive_goals[:100]
         elif len(negative_goals) > 100:
