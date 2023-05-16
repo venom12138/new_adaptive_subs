@@ -11,7 +11,8 @@ from supervised.int.representation import infix
 from supervised.int.representation.action_representation_pointer import generate_masks_for_logic_statement
 from utils import hf_generate, hf
 from third_party.INT.visualization.seq_parse import entity_to_seq_string, logic_statement_to_seq_string
-
+from supervised.int.representation.action_representation_pointer import generate_masks_for_logic_statement, generate_masks_for_logic_statements
+from supervised.int import utils as int_utils
 
 class VanillaPolicyINT:
     def __init__(self, checkpoint_path, num_return_sequences, max_steps_allowed, num_beams, device=None):
@@ -87,7 +88,8 @@ class VanillaPolicyINT:
             decoded_action = decode_prediction(action_str)
             if decoded_action is not None:
                 proof_state_copy = deepcopy(proof_state)
-                _, mask_to_entity = generate_masks_for_logic_statement(proof_state_copy['observation']['objectives'][0])
+                # _, mask_to_entity = generate_masks_for_logic_statement(proof_state_copy['observation']['objectives'][0])
+                _, mask_to_entity = generate_masks_for_logic_statements(int_utils.get_objective(proof_state_copy))
                 success = True
                 full_action = [decoded_action[0]]
                 debug_info['proper masks'] = True
