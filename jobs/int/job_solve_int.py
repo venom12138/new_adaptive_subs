@@ -69,14 +69,14 @@ class JobSolveINT(Job):
     def execute(self):
         solver = self.solver_class()
         # solver.construct_networks()
-        batch_jobs = 1000
+        batch_jobs = 100
         batch_goals = 1000
         devices = torch.cuda.device_count()
         devices = [torch.device(f'cuda:{i}') for i in range(devices)]
         positive_goals = []
         negative_goals = []
-        positive_chunk_num = 0
-        negative_chunk_num = 0
+        positive_chunk_num = 125
+        negative_chunk_num = 339
         if self.n_jobs % batch_jobs != 0:
             epochs = self.n_jobs // batch_jobs + 1
         else:
@@ -89,7 +89,7 @@ class JobSolveINT(Job):
                 jobs_to_do = min(batch_jobs, self.n_jobs)
             jobs_done = 0
             batch_num = 0
-            proofs_to_solve = generate_problems(batch_jobs)
+            proofs_to_solve = generate_problems(jobs_to_do)
             while jobs_to_do > 0:
                 jobs_in_batch = min(jobs_to_do, self.batch_size)
                 boards_to_solve_in_batch = proofs_to_solve[jobs_done:jobs_done + jobs_in_batch]

@@ -237,9 +237,18 @@ class HfTrainingPipeline(Job):
 
         t_iteration = time.time()
         datasets = self._generate_and_verify_datasets(done_epochs)
-        wandb.init(project=os.environ.get('WANDB_PROJECT', 'AutomatedTheoremProving'),
-                   group=os.environ.get('group_name', 'huggingface'),
-                   name=os.environ.get('run_name', self.output_dir),)
+        if self.resume_from_checkpoint:
+            if os.environ.get('wandb_run_id', None) == None:
+                assert False, "wandb_run_id is not set"
+            wandb.init(project=os.environ.get('WANDB_PROJECT', 'AutomatedTheoremProving'),
+                        group=os.environ.get('group_name', 'huggingface'),
+                        name=os.environ.get('run_name', self.output_dir),
+                        resume="allow",
+                        id=os.environ.get('wandb_run_id', None))
+        else:
+            wandb.init(project=os.environ.get('WANDB_PROJECT', 'AutomatedTheoremProving'),
+                    group=os.environ.get('group_name', 'huggingface'),
+                    name=os.environ.get('run_name', self.output_dir),)
         for iteration in range(first_iteration, self.n_iterations):
             t_training = time.time()
 

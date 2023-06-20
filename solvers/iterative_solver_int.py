@@ -257,8 +257,9 @@ class BestFSIterativeSolverINT(GeneralSolver):
                     positive_goals.extend(builder.positive_subgoals)
                     negative_goals.extend(builder.negative_subgoals)
         else:
-            positive_goals.extend(self.goal_builders.positive_subgoals)
-            negative_goals.extend(self.goal_builders.negative_subgoals)
+            if self.goal_builders.gather_data_for_verificator:
+                positive_goals.extend(self.goal_builders.positive_subgoals)
+                negative_goals.extend(self.goal_builders.negative_subgoals)
         if len(positive_goals) > 100:
             positive_goals = positive_goals[:100]
         elif len(negative_goals) > 100:

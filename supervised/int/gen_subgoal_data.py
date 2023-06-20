@@ -74,7 +74,7 @@ def get_available_axioms(axiom_set_name="ordered_field"):
 @gin.configurable
 def generate_problems(
     n_proofs, n_workers=4, proof_length=5,
-    load_from_path=None, seed=None, max_length_mode=None
+    load_from_path=None, seed=None, max_length_mode=None,start_file_number=0
 ):
     """
     Args (selected):
@@ -92,7 +92,7 @@ def generate_problems(
         problem_loader = getattr(generate_problems, 'problem_loader', None)
         if problem_loader is None:
             generate_problems.problem_loader = problem_loader = \
-                storage.LongListLoader(load_from_path)
+                storage.LongListLoader(load_from_path, start_file_number)
         # It may return less than n_proofs - when ran out of problems.
         problems.extend(problem_loader.load(n_proofs))
         print('\n-----load from offline file-----\n')

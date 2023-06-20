@@ -40,12 +40,12 @@ class LongListDumper:
 class LongListLoader:
     LOG_NAME = 'long_list_loader'
     
-    def __init__(self, dir_path):
+    def __init__(self, dir_path, start_file_number=0):
         self._dir_path = dir_path
         assert os.path.isdir(self._dir_path)
 
         self._leftover_elts = []
-        self._next_file_number = 0
+        self._next_file_number = start_file_number
         available_files = self.count_consecutive_files()
         log_text(
             self.LOG_NAME,

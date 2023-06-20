@@ -26,7 +26,7 @@ def generate_order_from_combination(chosen_axioms, application_times, use_tuple=
     if len(chosen_axioms) < application_times:
         if 'SecondLawOfIneqMoveTerm' in chosen_axioms:
             theorem_axioms = [axiom for axiom in chosen_axioms if axiom in theorems.keys()]
-            SecondLawOfIneqMoveTermTimes = random.randint(0, max(1, application_times - len(chosen_axioms) - 2))
+            SecondLawOfIneqMoveTermTimes = random.randint(0, max(1, min(application_times - len(chosen_axioms) - 2, 3)))
             additional_apps = []
             if len(theorem_axioms) > 0:
                 additional_apps = ['SecondLawOfIneqMoveTerm' for _ in range(SecondLawOfIneqMoveTermTimes)]
